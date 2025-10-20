@@ -9,7 +9,7 @@ import {
     ActivityIndicator,
     StyleSheet,
 } from 'react-native'
-import useGroups  from '../hooks/useGroups'
+import {useGroups}  from '../hooks/useGroups'
 
 export default function UtilisateursScreen({ navigation }) {
     const currentUser = { id: 1, nom: 'UserDemo' } // replace with your auth context if you have one
