@@ -72,7 +72,11 @@ export default function RegisterScreen({ navigation }) {
         setError('')
         setSuccess('')
 
-        if (!username.trim() || !password.trim()) return
+        if (!username.trim() || !password.trim() || !confirmPassword.trim()) {
+            setError('Veuillez remplir tous les champs')
+            return
+        }
+
         if (password !== confirmPassword) {
             setError('Les mots de passe ne correspondent pas')
             return
@@ -90,7 +94,7 @@ export default function RegisterScreen({ navigation }) {
                 setError(body.error || 'Erreur lors de l’inscription')
             } else {
                 setSuccess('Compte créé avec succès !')
-                navigation.navigate('Login')
+                navigation.replace('Login')
             }
         } catch (e) {
             console.error(e)

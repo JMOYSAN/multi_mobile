@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import styled from 'styled-components/native'
-import { Alert } from 'react-native'
+import {Alert, Text} from 'react-native'
 
 const LoginWrapper = styled.View`
   flex: 1;
@@ -59,7 +59,8 @@ const Link = styled.TouchableOpacity`
 `
 
 const LinkText = styled.Text`
-  color: #2c3639;
+    color: #2c3639;
+    text-align: center;
 `
 
 export default function LoginScreen({ navigation }) {
@@ -68,7 +69,10 @@ export default function LoginScreen({ navigation }) {
     const [error, setError] = useState('')
 
     const handleSubmit = async () => {
-        if (!username.trim() || !password.trim()) return
+        if (!username.trim() || !password.trim()) {
+            setError('Veuillez remplir tous les champs')
+            return
+        }
         setError('')
 
         try {
@@ -82,7 +86,6 @@ export default function LoginScreen({ navigation }) {
             if (res.status !== 200) {
                 setError(body.error || 'Erreur inconnue')
             } else {
-                // Example: go to Chat screen with response
                 navigation.navigate('Chat', { user: body.user })
             }
         } catch (e) {
@@ -117,7 +120,8 @@ export default function LoginScreen({ navigation }) {
                 </Button>
 
                 <Link onPress={() => navigation.replace('Register')}>
-                    <LinkText>Pas encore de compte ? Créer un compte</LinkText>
+                    <Text>Pas encore de compte ?</Text>
+                    <LinkText> Créer un compte </LinkText>
                 </Link>
             </LoginCard>
         </LoginWrapper>
