@@ -9,16 +9,17 @@ const LoginWrapper = styled.View`
   background-color: #2c3639;
 `
 
-const LoginCard = styled.View`
-  background-color: #dcd7c9;
-  padding: 40px 30px;
-  border-radius: 20px;
-  width: 85%;
-  elevation: 10;
-  shadow-color: #000;
-  shadow-opacity: 0.2;
-  shadow-radius: 8px;
-`
+const LoginCard = styled.View({
+    backgroundColor: '#dcd7c9',
+    padding: 40,
+    borderRadius: 20,
+    width: '85%',
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+})
 
 const Title = styled.Text`
   margin-bottom: 20px;
@@ -115,7 +116,7 @@ export default function LoginScreen({ navigation }) {
                     <ButtonText>Se connecter</ButtonText>
                 </Button>
 
-                <Link onPress={() => navigation.navigate('Register')}>
+                <Link onPress={() => navigation.replace('Register')}>
                     <LinkText>Pas encore de compte ? Créer un compte</LinkText>
                 </Link>
             </LoginCard>
