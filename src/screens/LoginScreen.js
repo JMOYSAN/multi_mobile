@@ -76,7 +76,7 @@ export default function LoginScreen({navigation}) {
         }
         setError('')
 
-        fetch('http://localhost:3000/users/login', {
+        fetch('http://10.105.0.18:3000/users/login', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({username, password}),
