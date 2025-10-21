@@ -61,6 +61,7 @@ const Link = styled.TouchableOpacity`
 const LinkText = styled.Text`
     color: #2c3639;
     text-align: center;
+    font-weight: bold;
 `
 
 export default function LoginScreen({navigation}) {
@@ -123,7 +124,7 @@ export default function LoginScreen({navigation}) {
 
                 <Link onPress={() => navigation.replace('Register')}>
                     <Text>Pas encore de compte ?</Text>
-                    <LinkText> Créer un compte </LinkText>
+                    <LinkText>Créer un compte</LinkText>
                 </Link>
             </LoginCard>
         </LoginWrapper>

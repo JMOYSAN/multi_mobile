@@ -1,5 +1,6 @@
 import {useState} from 'react'
 import styled from 'styled-components/native'
+import {Text} from "react-native";
 
 const RegisterWrapper = styled.View`
     flex: 1;
@@ -59,6 +60,8 @@ const Link = styled.TouchableOpacity`
 
 const LinkText = styled.Text`
     color: #2c3639;
+    text-align: center;
+    font-weight: bold;
 `
 
 export default function RegisterScreen({navigation}) {
@@ -140,7 +143,8 @@ export default function RegisterScreen({navigation}) {
                 </Button>
 
                 <Link onPress={() => navigation.replace('Login')}>
-                    <LinkText>Déjà inscrit ? Se connecter</LinkText>
+                    <Text>Vous avez déja un compte ?</Text>
+                    <LinkText>Se connecter</LinkText>
                 </Link>
             </RegisterCard>
         </RegisterWrapper>
