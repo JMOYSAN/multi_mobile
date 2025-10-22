@@ -1,4 +1,4 @@
-const API_URL = 'http://10.105.0.18:3000'
+const API_URL = 'http://10.13.0.13:3000'
 
 export function listPublicGroups() {
   return fetch(`${API_URL}/groups/public`).then((res) => {
