@@ -83,7 +83,7 @@ export function useMessages(currentGroupe, currentUser) {
         [currentUser?.id, currentGroupe?.id, runWithPending]
     )
 
-    // ✅ WebSocket live sync from Redis
+
     useEffect(() => {
         if (!currentUser?.id) return
 

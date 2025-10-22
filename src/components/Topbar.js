@@ -16,7 +16,7 @@ const TopBar = ({
     return (
         <View style={styles.container}>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                <Ionicons name="close" size={28} color="#333" />
+
             </TouchableOpacity>
 
             <View style={styles.info}>
