@@ -13,9 +13,9 @@ import ChatInput from '../components/messages/ChatInput';
 import MessageBubble from '../components/messages/MessageBubble';
 import MessageBubbleOther from '../components/messages/MessageBubbleOther';
 import TypingIndicator from '../components/messages/TypingIndicator';
-import TopBar from '../components/messages/TopBar';
+import TopBar from '../components/Topbar'
 
-import { useMessages } from '../hooks/useMessages';
+import { useMessages } from '../hooks/';
 
 const ChatScreen = ({
                         currentUser,
