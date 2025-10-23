@@ -1,6 +1,6 @@
 import {useState} from 'react'
 import styled from 'styled-components/native'
-import {Alert, Text} from 'react-native'
+import { API_URL } from '@env'
 
 const LoginWrapper = styled.View`
     flex: 1;
@@ -76,7 +76,7 @@ export default function LoginScreen({navigation}) {
         }
         setError('')
 
-        fetch('http://10.105.0.18:3000/users/login', {
+        fetch(`${API_URL}3000/users/login`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({username, password}),
