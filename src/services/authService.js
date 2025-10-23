@@ -1,6 +1,8 @@
-const API_URL = 'http://localhost:3000'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+const API_URL = 'http://10.0.0.33:3000'
 
 let accessToken = null
+let refreshToken = null // ← AJOUTE ÇA
 
 export function setAccessToken(token) {
     accessToken = token
@@ -14,7 +16,6 @@ export async function login(username, password) {
     const res = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ username, password }),
     })
 
@@ -22,8 +23,8 @@ export async function login(username, password) {
     if (!res.ok) throw new Error(data.error || 'Erreur de connexion')
 
     accessToken = data.accessToken
-
-    saveUserToStorage(data.user, data.accessToken)
+    refreshToken = data.refreshToken
+    await saveUserToStorage(data.user, data.accessToken, data.refreshToken)
 
     return { user: data.user, accessToken: data.accessToken }
 }
@@ -40,19 +41,13 @@ export async function register(username, password) {
 }
 
 export async function fetchWithAuth(url, options = {}) {
-    // Vérifier le token en mémoire d'abord
     if (!accessToken) {
-        accessToken = getAccessTokenFromStorage()
+        accessToken = await getAccessTokenFromStorage()
     }
 
-    // ✅ LOGS DE DEBUG
     console.log('🔍 DEBUG fetchWithAuth:')
     console.log('  URL:', url)
     console.log('  Token en mémoire:', accessToken ? 'OUI ✅' : 'NON ❌')
-    console.log(
-        '  Token (premiers chars):',
-        accessToken ? accessToken.substring(0, 20) + '...' : 'null'
-    )
 
     if (!accessToken) {
         console.error('❌ Pas de token disponible!')
@@ -64,15 +59,13 @@ export async function fetchWithAuth(url, options = {}) {
         Authorization: `Bearer ${accessToken}`,
     }
 
-    console.log('  Headers:', headers)
-
-    const res = await fetch(url, { ...options, headers, credentials: 'include' })
+    const res = await fetch(url, { ...options, headers })
 
     console.log('  Réponse status:', res.status)
 
     if (res.status === 401) {
         console.log('  ⚠️ 401 reçu, tentative de refresh...')
-        const refreshed = await refreshToken()
+        const refreshed = await refreshTokenFunc()
         if (refreshed) {
             console.log('  ✅ Token refreshed, nouvelle tentative')
             return fetchWithAuth(url, options)
@@ -84,33 +77,51 @@ export async function fetchWithAuth(url, options = {}) {
     return res
 }
 
-export async function refreshToken() {
+export async function refreshTokenFunc() {
+    if (!refreshToken) {
+        refreshToken = await getRefreshTokenFromStorage()
+    }
+
+    if (!refreshToken) {
+        return false
+    }
+
     const res = await fetch(`${API_URL}/auth/refresh`, {
         method: 'POST',
-        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken }),
     })
 
     if (!res.ok) {
-        clearUserFromStorage()
+        await clearUserFromStorage()
         accessToken = null
+        refreshToken = null
         return false
     }
 
     const data = await res.json()
     accessToken = data.accessToken
+    refreshToken = data.refreshToken
 
-    updateAccessTokenInStorage(data.accessToken)
+    await updateTokensInStorage(data.accessToken, data.refreshToken)
 
     return true
 }
 
 export async function logout() {
+    if (!refreshToken) {
+        refreshToken = await getRefreshTokenFromStorage()
+    }
+
     await fetch(`${API_URL}/auth/logout`, {
         method: 'POST',
-        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken }),
     })
+
     accessToken = null
-    clearUserFromStorage()
+    refreshToken = null
+    await clearUserFromStorage()
 }
 
 export async function listPrivateGroups(userId) {
@@ -119,22 +130,23 @@ export async function listPrivateGroups(userId) {
     return res.json()
 }
 
-export function saveUserToStorage(user, token) {
-    if (typeof window === 'undefined') return
+export async function saveUserToStorage(user, accessTok, refreshTok) {
     try {
-        localStorage.setItem('user', JSON.stringify(user))
-        if (token) {
-            localStorage.setItem('accessToken', token)
+        await AsyncStorage.setItem('user', JSON.stringify(user))
+        if (accessTok) {
+            await AsyncStorage.setItem('accessToken', accessTok)
+        }
+        if (refreshTok) {
+            await AsyncStorage.setItem('refreshToken', refreshTok)
         }
     } catch (err) {
         console.warn("Impossible de sauvegarder l'utilisateur", err)
     }
 }
 
-export function loadUserFromStorage() {
-    if (typeof window === 'undefined') return null
+export async function loadUserFromStorage() {
     try {
-        const stored = localStorage.getItem('user')
+        const stored = await AsyncStorage.getItem('user')
         return stored ? JSON.parse(stored) : null
     } catch (err) {
         console.warn("Impossible de charger l'utilisateur", err)
@@ -142,28 +154,51 @@ export function loadUserFromStorage() {
     }
 }
 
-export function getAccessTokenFromStorage() {
-    if (typeof window === 'undefined') return null
+export async function getAccessTokenFromStorage() {
     try {
-        return localStorage.getItem('accessToken')
+        return await AsyncStorage.getItem('accessToken')
     } catch (err) {
         console.warn('Impossible de charger le token', err)
         return null
     }
 }
 
-export function updateAccessTokenInStorage(token) {
-    if (typeof window === 'undefined') return
+export async function getRefreshTokenFromStorage() {
     try {
-        localStorage.setItem('accessToken', token)
+        return await AsyncStorage.getItem('refreshToken')
+    } catch (err) {
+        console.warn('Impossible de charger le refresh token', err)
+        return null
+    }
+}
+
+export async function updateTokensInStorage(accessTok, refreshTok) {
+    try {
+        if (accessTok) {
+            await AsyncStorage.setItem('accessToken', accessTok)
+        }
+        if (refreshTok) {
+            await AsyncStorage.setItem('refreshToken', refreshTok)
+        }
+    } catch (err) {
+        console.warn('Impossible de mettre à jour les tokens', err)
+    }
+}
+
+export async function updateAccessTokenInStorage(token) {
+    try {
+        await AsyncStorage.setItem('accessToken', token)
     } catch (err) {
         console.warn('Impossible de mettre à jour le token', err)
     }
 }
 
-export function clearUserFromStorage() {
-    if (typeof window === 'undefined') return
-    localStorage.clear()
+export async function clearUserFromStorage() {
+    try {
+        await AsyncStorage.clear()
+    } catch (err) {
+        console.warn('Impossible de vider le storage', err)
+    }
 }
 
 export function updateUserTheme(userId, newTheme) {

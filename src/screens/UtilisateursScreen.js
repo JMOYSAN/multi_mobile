@@ -23,7 +23,6 @@ export default function UtilisateursScreen({ navigation }) {
     } = useGroups(currentUser)
 
     const [isRefreshing, setIsRefreshing] = useState(false)
-
     const handleJoin = useCallback(
         async (groupe) => {
             Alert.alert(
@@ -35,19 +34,26 @@ export default function UtilisateursScreen({ navigation }) {
                         text: 'Oui',
                         onPress: async () => {
                             try {
-                                await joinGroupe(groupe.id)
-                                Alert.alert('Succès', `Vous avez rejoint ${groupe.nom}`)
+                                await joinGroupe(groupe.id);
+                                Alert.alert('Succès', `Vous avez rejoint ${groupe.nom}`);
+
+
+                                navigation.navigate('ChatScreen', {
+                                    currentGroupe: groupe,
+                                    currentUser,
+                                });
                             } catch (err) {
-                                console.error('Erreur join:', err)
-                                Alert.alert('Erreur', 'Impossible de rejoindre le groupe')
+                                console.error('Erreur join:', err);
+                                Alert.alert('Erreur', 'Impossible de rejoindre le groupe');
                             }
                         },
                     },
                 ]
-            )
+            );
         },
-        [joinGroupe]
-    )
+        [joinGroupe, navigation, currentUser]
+    );
+
 
     const handleRefresh = async () => {
         setIsRefreshing(true)
