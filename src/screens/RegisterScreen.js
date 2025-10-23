@@ -1,6 +1,7 @@
-import {useState} from 'react'
+import { useState } from 'react'
 import styled from 'styled-components/native'
-import {Text} from "react-native";
+import { Text, Alert } from 'react-native'
+import { useAuth } from '../context/AuthContext'
 
 const RegisterWrapper = styled.View`
     flex: 1;
@@ -18,7 +19,7 @@ const RegisterCard = styled.View({
     shadowColor: '#000',
     shadowOpacity: 0.2,
     shadowRadius: 8,
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
 })
 
 const Title = styled.Text`
@@ -64,49 +65,40 @@ const LinkText = styled.Text`
     font-weight: bold;
 `
 
-export default function RegisterScreen({navigation}) {
+export default function RegisterScreen({ navigation }) {
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
-    const [error, setError] = useState('')
-    const [success, setSuccess] = useState('')
+    const [localError, setLocalError] = useState('')
+    const { register, pending, error: authError } = useAuth()
 
-    const handleSubmit = () => {
-        setError('')
-        setSuccess('')
+    const handleSubmit = async () => {
+        setLocalError('')
 
         if (!username.trim() || !password.trim() || !confirmPassword.trim()) {
-            setError('Veuillez remplir tous les champs')
+            setLocalError('Veuillez remplir tous les champs')
             return
         }
 
         if (password !== confirmPassword) {
-            setError('Les mots de passe ne correspondent pas')
+            setLocalError('Les mots de passe ne correspondent pas')
             return
         }
 
-        fetch('http://localhost:3000/users/register', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({username, password}),
-        })
-            .then((res) =>
-                res.json().then((data) => ({status: res.status, body: data}))
-            )
-            .then(({status, body}) => {
-                if (status !== 201) {
-                    setError(body.error || 'Erreur lors de l’inscription')
-                } else {
-                    setSuccess('Compte créé avec succès !')
-                    navigation.replace('Login')
-                }
-            })
-            .catch((err) => {
-                console.error(err)
-                setError('Erreur serveur')
-            })
+        try {
+            await register(username, password)
+            Alert.alert('Succès', 'Compte créé avec succès!', [
+                {
+                    text: 'OK',
+                    onPress: () => navigation.replace('Login'),
+                },
+            ])
+        } catch (err) {
+            setLocalError(err.message || "Erreur lors de l'inscription")
+        }
     }
 
+    const displayError = localError || authError
 
     return (
         <RegisterWrapper>
@@ -117,33 +109,33 @@ export default function RegisterScreen({navigation}) {
                     placeholder="Nom d'utilisateur"
                     value={username}
                     onChangeText={setUsername}
+                    editable={!pending}
                 />
                 <Input
                     placeholder="Mot de passe"
                     secureTextEntry
                     value={password}
                     onChangeText={setPassword}
+                    editable={!pending}
                 />
                 <Input
                     placeholder="Confirmer le mot de passe"
                     secureTextEntry
                     value={confirmPassword}
                     onChangeText={setConfirmPassword}
+                    editable={!pending}
                 />
 
-                {error ? (
-                    <Title style={{color: 'red', fontSize: 14}}>{error}</Title>
-                ) : null}
-                {success ? (
-                    <Title style={{color: 'green', fontSize: 14}}>{success}</Title>
+                {displayError ? (
+                    <Title style={{ color: 'red', fontSize: 14 }}>{displayError}</Title>
                 ) : null}
 
-                <Button onPress={handleSubmit}>
-                    <ButtonText>S'inscrire</ButtonText>
+                <Button onPress={handleSubmit} disabled={pending}>
+                    <ButtonText>{pending ? 'Inscription...' : "S'inscrire"}</ButtonText>
                 </Button>
 
-                <Link onPress={() => navigation.replace('Login')}>
-                    <Text>Vous avez déja un compte ?</Text>
+                <Link onPress={() => navigation.replace('Login')} disabled={pending}>
+                    <Text>Vous avez déjà un compte ?</Text>
                     <LinkText>Se connecter</LinkText>
                 </Link>
             </RegisterCard>

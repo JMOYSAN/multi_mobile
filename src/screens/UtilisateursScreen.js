@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import {
     View,
     Text,
@@ -8,20 +8,14 @@ import {
     Alert,
     ActivityIndicator,
     StyleSheet,
+    RefreshControl,
 } from 'react-native'
-import {useGroups}  from '../hooks/useGroups'
+import { useGroups } from '../hooks/useGroups'
+import { useAuth } from '../context/AuthContext'
 
 export default function UtilisateursScreen({ navigation }) {
-    const currentUser = { id: 1, nom: 'UserDemo' } // replace with your auth context if you have one
-
-    const {
-        groupes,
-        joinGroupe,
-        loadMoreGroups,
-        loadGroupMembers,
-        pending,
-    } = useGroups(currentUser)
-
+    const { currentUser } = useAuth()
+    const { groupes, joinGroupe, loadMoreGroups, pending } = useGroups(currentUser)
     const [isRefreshing, setIsRefreshing] = useState(false)
 
     const handleJoin = useCallback(
@@ -36,7 +30,7 @@ export default function UtilisateursScreen({ navigation }) {
                         onPress: async () => {
                             try {
                                 await joinGroupe(groupe.id)
-                                Alert.alert('Succès', `Vous avez rejoint ${groupe.nom}`)
+                                Alert.alert('Succès', `Vous avez rejoint ${groupe.nom || groupe.name}`)
                             } catch (err) {
                                 console.error('Erreur join:', err)
                                 Alert.alert('Erreur', 'Impossible de rejoindre le groupe')
@@ -51,9 +45,22 @@ export default function UtilisateursScreen({ navigation }) {
 
     const handleRefresh = async () => {
         setIsRefreshing(true)
-        await loadMoreGroups('public')
-        await loadMoreGroups('private')
-        setIsRefreshing(false)
+        try {
+            await Promise.all([loadMoreGroups('public'), loadMoreGroups('private')])
+        } finally {
+            setIsRefreshing(false)
+        }
+    }
+
+    const handleScroll = (event) => {
+        const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent
+        const isCloseToBottom =
+            layoutMeasurement.height + contentOffset.y >= contentSize.height - 20
+
+        if (isCloseToBottom && !pending && !isRefreshing) {
+            loadMoreGroups('public')
+            loadMoreGroups('private')
+        }
     }
 
     return (
@@ -61,37 +68,47 @@ export default function UtilisateursScreen({ navigation }) {
             <ScrollView
                 style={styles.scroll}
                 contentContainerStyle={styles.scrollContent}
-                onMomentumScrollEnd={() => {
-                    loadMoreGroups('public')
-                    loadMoreGroups('private')
-                }}
+                onScroll={handleScroll}
+                scrollEventThrottle={400}
                 refreshControl={
-                    <ActivityIndicator animating={isRefreshing || pending} size="small" />
+                    <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
                 }
             >
                 <Text style={styles.sectionTitle}>Groupes publics</Text>
-                {groupes.public.map((g) => (
-                    <TouchableOpacity
-                        key={`pub-${g.id}`}
-                        style={styles.groupItem}
-                        onPress={() => handleJoin(g)}
-                    >
-                        <Text style={styles.groupName}>{g.nom || g.name}</Text>
-                    </TouchableOpacity>
-                ))}
+                {groupes.public.length > 0 ? (
+                    groupes.public.map((g) => (
+                        <TouchableOpacity
+                            key={`pub-${g.id}`}
+                            style={styles.groupItem}
+                            onPress={() => handleJoin(g)}
+                        >
+                            <Text style={styles.groupName}>{g.nom || g.name}</Text>
+                        </TouchableOpacity>
+                    ))
+                ) : (
+                    <Text style={styles.emptyText}>Aucun groupe public</Text>
+                )}
 
                 <Text style={styles.sectionTitle}>Groupes privés</Text>
-                {groupes.private.map((g) => (
-                    <TouchableOpacity
-                        key={`priv-${g.id}`}
-                        style={styles.groupItem}
-                        onPress={() => handleJoin(g)}
-                    >
-                        <Text style={styles.groupName}>{g.nom || g.name}</Text>
-                    </TouchableOpacity>
-                ))}
+                {groupes.private.length > 0 ? (
+                    groupes.private.map((g) => (
+                        <TouchableOpacity
+                            key={`priv-${g.id}`}
+                            style={styles.groupItem}
+                            onPress={() => handleJoin(g)}
+                        >
+                            <Text style={styles.groupName}>{g.nom || g.name}</Text>
+                        </TouchableOpacity>
+                    ))
+                ) : (
+                    <Text style={styles.emptyText}>Aucun groupe privé</Text>
+                )}
 
-                {pending && <ActivityIndicator size="large" style={{ marginTop: 20 }} />}
+                {pending && (
+                    <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="large" color="#2c3639" />
+                    </View>
+                )}
 
                 <View style={{ marginTop: 30 }}>
                     <Button title="Retour à l'accueil" onPress={() => navigation.navigate('Home')} />
@@ -130,5 +147,15 @@ const styles = StyleSheet.create({
     groupName: {
         fontSize: 16,
         color: '#2c3639',
+    },
+    emptyText: {
+        fontSize: 14,
+        color: '#666',
+        fontStyle: 'italic',
+        marginBottom: 10,
+    },
+    loadingContainer: {
+        marginTop: 20,
+        alignItems: 'center',
     },
 })

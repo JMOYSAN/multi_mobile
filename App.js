@@ -1,19 +1,24 @@
-import { useEffect } from 'react'
-import * as SplashScreen from 'expo-splash-screen'
 import { NavigationContainer } from '@react-navigation/native'
-import RootNavigator from './src/navigation/RootNavigator'  // ← no braces
+import { AuthProvider, useAuth } from './src/context/AuthContext'
+import { ThemeProvider } from './src/context/ThemeContext'
+import RootNavigator from './src/navigation/RootNavigator'
 
-SplashScreen.preventAutoHideAsync()
-
-export default function App() {
-    useEffect(() => {
-        const timer = setTimeout(() => SplashScreen.hideAsync(), 600)
-        return () => clearTimeout(timer)
-    }, [])
+function AppContent() {
+    const { currentUser } = useAuth()
 
     return (
-        <NavigationContainer>
+        <ThemeProvider userTheme={currentUser?.theme}>
             <RootNavigator />
-        </NavigationContainer>
+        </ThemeProvider>
+    )
+}
+
+export default function App() {
+    return (
+        <AuthProvider>
+            <NavigationContainer>
+                <AppContent />
+            </NavigationContainer>
+        </AuthProvider>
     )
 }

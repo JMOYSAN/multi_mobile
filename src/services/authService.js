@@ -1,4 +1,5 @@
-const API_URL = 'http://localhost:3000'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+const API_URL = 'http://192.168.1.188:3000'
 
 let accessToken = null
 
@@ -119,22 +120,20 @@ export async function listPrivateGroups(userId) {
     return res.json()
 }
 
-export function saveUserToStorage(user, token) {
-    if (typeof window === 'undefined') return
+export async function saveUserToStorage(user, token) {
     try {
-        localStorage.setItem('user', JSON.stringify(user))
+        await AsyncStorage.setItem('user', JSON.stringify(user))
         if (token) {
-            localStorage.setItem('accessToken', token)
+            await AsyncStorage.setItem('accessToken', token)
         }
     } catch (err) {
         console.warn("Impossible de sauvegarder l'utilisateur", err)
     }
 }
 
-export function loadUserFromStorage() {
-    if (typeof window === 'undefined') return null
+export async function loadUserFromStorage() {
     try {
-        const stored = localStorage.getItem('user')
+        const stored = await AsyncStorage.getItem('user')
         return stored ? JSON.parse(stored) : null
     } catch (err) {
         console.warn("Impossible de charger l'utilisateur", err)
@@ -142,28 +141,29 @@ export function loadUserFromStorage() {
     }
 }
 
-export function getAccessTokenFromStorage() {
-    if (typeof window === 'undefined') return null
+export async function getAccessTokenFromStorage() {
     try {
-        return localStorage.getItem('accessToken')
+        return await AsyncStorage.getItem('accessToken')
     } catch (err) {
         console.warn('Impossible de charger le token', err)
         return null
     }
 }
 
-export function updateAccessTokenInStorage(token) {
-    if (typeof window === 'undefined') return
+export async function updateAccessTokenInStorage(token) {
     try {
-        localStorage.setItem('accessToken', token)
+        await AsyncStorage.setItem('accessToken', token)
     } catch (err) {
         console.warn('Impossible de mettre à jour le token', err)
     }
 }
 
-export function clearUserFromStorage() {
-    if (typeof window === 'undefined') return
-    localStorage.clear()
+export async function clearUserFromStorage() {
+    try {
+        await AsyncStorage.clear()
+    } catch (err) {
+        console.warn('Impossible de vider le storage', err)
+    }
 }
 
 export function updateUserTheme(userId, newTheme) {
