@@ -1,6 +1,7 @@
-import {useState} from 'react'
+import { useState } from 'react'
 import styled from 'styled-components/native'
-import {Alert, Text} from 'react-native'
+import { Text, Alert } from 'react-native'
+import { useAuth } from '../context/AuthContext'
 
 const LoginWrapper = styled.View`
     flex: 1;
@@ -18,7 +19,7 @@ const LoginCard = styled.View({
     shadowColor: '#000',
     shadowOpacity: 0.2,
     shadowRadius: 8,
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
 })
 
 const Title = styled.Text`
@@ -64,37 +65,24 @@ const LinkText = styled.Text`
     font-weight: bold;
 `
 
-export default function LoginScreen({navigation}) {
+export default function LoginScreen({ navigation }) {
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
-    const [error, setError] = useState('')
+    const { login, pending, error: authError } = useAuth()
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!username.trim() || !password.trim()) {
-            setError('Veuillez remplir tous les champs')
+            Alert.alert('Erreur', 'Veuillez remplir tous les champs')
             return
         }
-        setError('')
 
-        fetch('http://10.105.0.18:3000/users/login', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({username, password}),
-        })
-            .then((res) =>
-                res.json().then((data) => ({status: res.status, body: data}))
-            )
-            .then(({status, body}) => {
-                if (status !== 200) {
-                    setError(body.error || 'Erreur inconnue')
-                } else {
-                    navigation.navigate('Chat', {user: body.user})
-                }
-            })
-            .catch((err) => {
-                console.error(err)
-                setError('Erreur serveur')
-            })
+        try {
+            await login(username, password)
+            Alert.alert('Succès', 'Connexion réussie!')
+            navigation.navigate('Home')
+        } catch (err) {
+            Alert.alert('Erreur', err.message || 'Erreur de connexion')
+        }
     }
 
     return (
@@ -106,23 +94,25 @@ export default function LoginScreen({navigation}) {
                     placeholder="Nom d'utilisateur"
                     value={username}
                     onChangeText={setUsername}
+                    editable={!pending}
                 />
                 <Input
                     placeholder="Mot de passe"
                     secureTextEntry
                     value={password}
                     onChangeText={setPassword}
+                    editable={!pending}
                 />
 
-                {error ? (
-                    <Title style={{color: 'red', fontSize: 14}}>{error}</Title>
+                {authError ? (
+                    <Title style={{ color: 'red', fontSize: 14 }}>{authError}</Title>
                 ) : null}
 
-                <Button onPress={handleSubmit}>
-                    <ButtonText>Se connecter</ButtonText>
+                <Button onPress={handleSubmit} disabled={pending}>
+                    <ButtonText>{pending ? 'Connexion...' : 'Se connecter'}</ButtonText>
                 </Button>
 
-                <Link onPress={() => navigation.replace('Register')}>
+                <Link onPress={() => navigation.replace('Register')} disabled={pending}>
                     <Text>Pas encore de compte ?</Text>
                     <LinkText>Créer un compte</LinkText>
                 </Link>
