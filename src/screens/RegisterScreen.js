@@ -1,6 +1,7 @@
 import {useState} from 'react'
 import styled from 'styled-components/native'
 import {Text} from "react-native";
+import { API_URL } from '@env'
 
 const RegisterWrapper = styled.View`
     flex: 1;
@@ -85,7 +86,7 @@ export default function RegisterScreen({navigation}) {
             return
         }
 
-        fetch('http://localhost:3000/users/register', {
+        fetch(`${API_URL}3000/users/register`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({username, password}),
