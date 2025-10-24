@@ -137,8 +137,6 @@ Cette itération doit démontrer l’expérience complète d’un chat :
 
 
 
-
-
 # 📱 Application Mobile de Messagerie 
 
 ## 🧩 Présentation générale
