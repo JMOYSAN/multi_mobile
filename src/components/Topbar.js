@@ -1,33 +1,22 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
-
-const TopBar = ({
-                    utilisateurs,
-                    currentGroupe,
-                    currentUser,
-                    setCurrentUser,
-                    onClose,
-                    setCurrentGroupe,
-                    setGroupes,
-                }) => {
+const TopBar = ({ currentGroupe, participants = [], onClose }) => {
     const groupeName = currentGroupe?.name || 'Discussion';
+    const count = participants.length;
 
     return (
         <View style={styles.container}>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-
+                <Text style={styles.closeText}>←</Text>
             </TouchableOpacity>
 
             <View style={styles.info}>
                 <Text style={styles.groupeName}>{groupeName}</Text>
                 <Text style={styles.participants}>
-                    {currentGroupe?.participants?.length || 0} participant
-                    {currentGroupe?.participants?.length > 1 ? 's' : ''}
+                    {count} participant{count > 1 ? 's' : ''}
                 </Text>
             </View>
-
-            {/* You can add buttons or menus here to manage users/groups if needed */}
         </View>
     );
 };
@@ -44,6 +33,10 @@ const styles = StyleSheet.create({
     },
     closeButton: {
         padding: 6,
+    },
+    closeText: {
+        fontSize: 22,
+        color: '#333',
     },
     info: {
         flex: 1,

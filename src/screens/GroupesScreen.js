@@ -9,10 +9,11 @@ import {
     ActivityIndicator,
     StyleSheet,
 } from 'react-native'
-import {useGroups}  from '../hooks/useGroups'
+import { useGroups } from '../hooks/useGroups'
+import { useAuth } from '../context/AuthContext'
 
-export default function UtilisateursScreen({ navigation }) {
-    const currentUser = { id: 1, nom: 'UserDemo' } // replace with your auth context if you have one
+export default function GroupesScreen({ navigation }) {
+    const { currentUser } = useAuth()
 
     const {
         groupes,
@@ -26,18 +27,29 @@ export default function UtilisateursScreen({ navigation }) {
     const handleJoin = useCallback(
         async (groupe) => {
             Alert.alert(
-                'Rejoindre le groupe',
-                `Voulez-vous rejoindre ${groupe.nom || groupe.name}?`,
+                'Ouvrir le groupe',
+                `Voulez-vous ouvrir ${groupe.nom || groupe.name}?`,
                 [
                     { text: 'Annuler', style: 'cancel' },
                     {
                         text: 'Oui',
                         onPress: async () => {
                             try {
-                                await joinGroupe(groupe.id);
-                                Alert.alert('Succès', `Vous avez rejoint ${groupe.nom}`);
+                                // Check if already in group
+                                const members = await loadGroupMembers(groupe.id);
+                                const alreadyIn =
+                                    Array.isArray(members) &&
+                                    members.some((m) => m.id === currentUser.id);
 
+                                if (alreadyIn) {
+                                    console.log(`[GroupesScreen] User ${currentUser.id} already in group ${groupe.id}`);
+                                } else {
+                                    console.log(`[GroupesScreen] Joining group ${groupe.id}...`);
+                                    await joinGroupe(groupe.id);
+                                    Alert.alert('Succès', `Vous avez rejoint ${groupe.nom || groupe.name}`);
+                                }
 
+                                // Always open the chat screen afterward
                                 navigation.navigate('ChatScreen', {
                                     currentGroupe: groupe,
                                     currentUser,
@@ -51,8 +63,9 @@ export default function UtilisateursScreen({ navigation }) {
                 ]
             );
         },
-        [joinGroupe, navigation, currentUser]
+        [joinGroupe, loadGroupMembers, navigation, currentUser]
     );
+
 
 
     const handleRefresh = async () => {

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
     View,
     FlatList,
@@ -6,142 +6,194 @@ import {
     StyleSheet,
     KeyboardAvoidingView,
     Platform,
-    ScrollView
+    SafeAreaView,
 } from 'react-native';
-
 import ChatInput from '../components/messages/ChatInput';
 import MessageBubble from '../components/messages/MessageBubble';
 import MessageBubbleOther from '../components/messages/MessageBubbleOther';
 import TypingIndicator from '../components/messages/TypingIndicator';
-import TopBar from '../components/Topbar'
+import TopBar from '../components/Topbar';
+import {
+    fetchMessages,
+    fetchOlderMessages,
+    sendMessage,
+} from '../services/messageService.js';
+import { fetchWithAuth } from '../services/authService.js';
+import { API_URL } from '@env';
 
-import { useMessages } from '../hooks/useMessages'
-const ChatScreen = ({
-                        currentUser,
-                        setCurrentUser,
-                        currentGroupe,
-                        utilisateurs,
-                        onClose,
-                        setCurrentGroupe,
-                        setGroupes,
-                    }) => {
+export default function ChatScreen({ route, navigation }) {
+    const { currentUser, currentGroupe } = route.params;
+    const [messages, setMessages] = useState([]);
+    const [participants, setParticipants] = useState([]);
+    const [pending, setPending] = useState(false);
+    const [hasMore, setHasMore] = useState(true);
     const flatListRef = useRef(null);
-    const {
-        messages,
-        loadMoreMessages,
-        hasMore,
-        pending,
-        members,
-        refresh,
-    } = useMessages(currentGroupe, currentUser);
 
+    const log = (...args) => console.log('[ChatScreen]', ...args);
 
-    useEffect(() => {
-        if (!pending && flatListRef.current) {
-            flatListRef.current.scrollToEnd({ animated: true });
+    // ---- Fetch participants ----
+    const loadParticipants = async () => {
+        if (!currentGroupe?.id) return;
+        const url = `${API_URL}/groups-users/group/${currentGroupe.id}`;
+        try {
+            const res = await fetchWithAuth(url);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            setParticipants(data || []);
+        } catch (err) {
+            console.error('[ChatScreen] Erreur chargement participants:', err);
+            setParticipants([]);
         }
-    }, [messages]);
+    };
 
+    // ---- Fetch messages ----
+    const loadMessages = async () => {
+        if (!currentGroupe?.id) return;
+        try {
+            setPending(true);
+            const data = await fetchMessages(currentGroupe.id);
+            setMessages(data || []);
+            setHasMore(data?.length >= 20);
+        } catch (err) {
+            console.error('[ChatScreen] Erreur chargement messages:', err);
+        } finally {
+            setPending(false);
+        }
+    };
+
+    // ---- Lazy load older messages ----
+    const loadMoreMessages = async () => {
+        if (!hasMore || pending || messages.length === 0) return;
+        const firstId = messages[messages.length - 1].id; // oldest because list is inverted
+        try {
+            setPending(true);
+            const older = await fetchOlderMessages(currentGroupe.id, firstId);
+            if (!older || older.length === 0) setHasMore(false);
+            else setMessages((prev) => [...prev, ...older]);
+        } catch (err) {
+            console.error('[ChatScreen] Erreur chargement anciens messages:', err);
+        } finally {
+            setPending(false);
+        }
+    };
+
+    // ---- Send message ----
     const handleSend = async (contenu) => {
-        if (!currentUser || !currentGroupe || !contenu?.message?.trim()) return;
+        if (!contenu?.message?.trim() || !currentUser || !currentGroupe) return;
+        const userId = currentUser.id;
+        const groupId = currentGroupe.id;
+        const content = contenu.message;
 
         try {
-            const res = await fetch('http://10.13.0.13:3000/messages', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    user_id: currentUser.id,
-                    group_id: currentGroupe.id,
-                    content: contenu.message,
-                }),
-            });
-            if (!res.ok) throw new Error('Erreur envoi message');
-            await res.json();
+            log('🚀 Sending message →', { userId, groupId, content });
+            const msg = await sendMessage(userId, groupId, content);
+
+            // Prepend for inverted list
+            setMessages((prev) => [msg, ...prev]);
+
+            if (flatListRef.current) {
+                flatListRef.current.scrollToOffset({ offset: 0, animated: true });
+            }
         } catch (err) {
-            console.error('Erreur envoi message:', err);
+            console.error('[ChatScreen] Erreur envoi message:', err);
         }
     };
 
-    const handleLoadMore = async () => {
-        if (hasMore && !pending && messages.length > 0) {
-            const firstId = messages[0]?.id;
-            await loadMoreMessages(firstId);
+    // ---- Load on group change ----
+    useEffect(() => {
+        loadMessages();
+        loadParticipants();
+    }, [currentGroupe]);
+
+    // ---- Merge usernames ----
+    useEffect(() => {
+        if (participants.length && messages.length) {
+            const merged = messages.map((m) => {
+                const p = participants.find((p) => p.id === m.user_id);
+                return {
+                    ...m,
+                    username: p
+                        ? p.username
+                        : m.user_id === currentUser.id
+                            ? currentUser.nom || 'Moi'
+                            : 'Inconnu',
+                };
+            });
+            setMessages(merged);
         }
-    };
+    }, [participants]);
 
     const participantsTyping =
-        currentGroupe?.participants?.filter(
-            (p) => p.isTyping && p.nom !== currentUser?.username
+        participants.filter(
+            (p) => p.isTyping && p.username !== currentUser?.username
         ) || [];
 
     return (
-        <KeyboardAvoidingView
-            style={styles.container}
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-            keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
-        >
-            <TopBar
-                utilisateurs={utilisateurs}
-                currentGroupe={currentGroupe}
-                currentUser={currentUser}
-                setCurrentUser={setCurrentUser}
-                onClose={onClose}
-                setCurrentGroupe={setCurrentGroupe}
-                setGroupes={setGroupes}
-            />
+        <SafeAreaView style={styles.safe}>
+            <KeyboardAvoidingView
+                style={styles.container}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
+            >
+                <TopBar
+                    currentGroupe={currentGroupe}
+                    participants={participants}
+                    onClose={() => navigation.goBack()}
+                />
 
-            <FlatList
-                ref={flatListRef}
-                data={[...messages].reverse()}
-                inverted
-                keyExtractor={(item) => item.id.toString()}
-                contentContainerStyle={styles.messagesContainer}
-                onEndReached={handleLoadMore}
-                onEndReachedThreshold={0.2}
-                ListFooterComponent={
-                    pending && messages.length > 0 ? (
-                        <Text style={styles.loadingText}>Chargement...</Text>
-                    ) : null
-                }
-                renderItem={({ item }) =>
-                    item.user_id === currentUser.id ? (
-                        <MessageBubble message={item} members={members} />
-                    ) : (
-                        <MessageBubbleOther message={item} members={members} />
-                    )
-                }
-            />
+                <FlatList
+                    ref={flatListRef}
+                    data={messages}
+                    inverted
+                    keyExtractor={(item, index) => `${item.id || 'tmp'}-${index}`}
+                    contentContainerStyle={styles.messagesContainer}
+                    onEndReached={loadMoreMessages}
+                    onEndReachedThreshold={0.2}
+                    ListFooterComponent={
+                        pending ? (
+                            <Text style={styles.loadingText}>Chargement...</Text>
+                        ) : null
+                    }
+                    renderItem={({ item }) => {
+                        const mine = item.user_id === currentUser.id;
+                        return mine ? (
+                            <MessageBubble message={item} />
+                        ) : (
+                            <MessageBubbleOther message={item} />
+                        );
+                    }}
+                />
 
-            {participantsTyping.length > 0 && (
-                <View style={styles.typingContainer}>
-                    {participantsTyping.map((p) => (
-                        <TypingIndicator key={p.nom} nom={p.nom} />
-                    ))}
+                {participantsTyping.length > 0 && (
+                    <View style={styles.typingContainer}>
+                        {participantsTyping.map((p) => (
+                            <TypingIndicator key={p.id} nom={p.username} />
+                        ))}
+                    </View>
+                )}
+
+                <View style={styles.inputContainer}>
+                    <ChatInput onSend={handleSend} disabled={pending} />
                 </View>
-            )}
-
-            <ChatInput onSend={handleSend} />
-        </KeyboardAvoidingView>
+            </KeyboardAvoidingView>
+        </SafeAreaView>
     );
-};
+}
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#fff',
-    },
-    messagesContainer: {
-        padding: 10,
-    },
-    typingContainer: {
-        paddingHorizontal: 10,
-        paddingBottom: 5,
-    },
+    safe: { flex: 1, backgroundColor: '#fff' },
+    container: { flex: 1 },
+    messagesContainer: { padding: 10, flexGrow: 1 },
+    typingContainer: { paddingHorizontal: 10, paddingBottom: 5 },
     loadingText: {
         textAlign: 'center',
         paddingVertical: 10,
         color: '#999',
     },
+    inputContainer: {
+        borderTopWidth: 1,
+        borderTopColor: '#ddd',
+        backgroundColor: '#f9f9f9',
+        paddingBottom: Platform.OS === 'ios' ? 10 : 5,
+    },
 });
-
-export default ChatScreen;
