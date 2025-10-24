@@ -1,34 +1,27 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createContext, useContext, useState, useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 
 const ThemeContext = createContext(null);
 
 export const lightTheme = {
     background: '#F3EEEA',
-    text: '#000',
-    cardBackground: '#EBE3D5',
 };
 
 export const darkTheme = {
     background: '#2c3639',
-    text: '#dcd7c9',
-    cardBackground: '#3f4e4f',
 };
 
-export function ThemeProvider({ children }) {
-    const system = useColorScheme();
-    const [theme, setTheme] = useState(system || 'light');
+
+export function ThemeProvider({ children, userTheme }) {
+    const systemColorScheme = useColorScheme();
+    const [theme, setTheme] = useState(userTheme || systemColorScheme || 'light');
+
 
     useEffect(() => {
-        AsyncStorage.getItem('appTheme').then((saved) => {
-            if (saved) setTheme(saved);
-        });
-    }, []);
-
-    useEffect(() => {
-        AsyncStorage.setItem('appTheme', theme);
-    }, [theme]);
+        if (userTheme && userTheme !== theme) {
+            setTheme(userTheme);
+        }
+    }, [userTheme]);
 
     const colors = theme === 'dark' ? darkTheme : lightTheme;
 
@@ -40,7 +33,7 @@ export function ThemeProvider({ children }) {
 }
 
 export function useTheme() {
-    const ctx = useContext(ThemeContext);
-    if (!ctx) throw new Error('useTheme must be used inside ThemeProvider');
-    return ctx;
+    const context = useContext(ThemeContext);
+    if (!context) throw new Error('useTheme must be used inside ThemeProvider');
+    return context;
 }

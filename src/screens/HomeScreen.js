@@ -1,3 +1,4 @@
+import React from 'react';
 import { View, Text, Button, StyleSheet } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -7,12 +8,15 @@ export default function HomeScreen({ navigation }) {
     const { currentUser, isConnect, logout } = useAuth();
     const { theme, colors } = useTheme();
 
+    // Dynamic styling
     const dynamicTextColor = theme === 'dark' ? '#b38bfa' : colors.text;
-    const dynamicButtonColor = theme === 'dark' ? '#b38bfa' : colors.primary || '#2c3639';
+    const dynamicButtonColor = theme === 'dark' ? '#b38bfa' : colors.primary;
+    const dynamicBackground = colors?.background || '#FFFFFF'; // fallback
 
     return (
-        <View style={[styles.container, { backgroundColor: colors.background }]}>
-            <ThemeToggleButton />
+        <View style={[styles.container, { backgroundColor: dynamicBackground }]}>
+            {/* ✅ Only show theme toggle when connected */}
+            {isConnect && <ThemeToggleButton />}
 
             <Text style={[styles.title, { color: dynamicTextColor }]}>
                 {isConnect
@@ -38,7 +42,6 @@ export default function HomeScreen({ navigation }) {
             ) : (
                 <>
                     <View style={{ marginTop: 10 }}>
-
                         <Button
                             title="Voir les Utilisateurs"
                             onPress={() => navigation.navigate('Users')}
@@ -78,9 +81,5 @@ const styles = StyleSheet.create({
         fontSize: 22,
         marginBottom: 20,
         textAlign: 'center',
-    },
-    label: {
-        fontSize: 18,
-        marginBottom: 6,
     },
 });

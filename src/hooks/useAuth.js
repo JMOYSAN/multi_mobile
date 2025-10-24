@@ -45,14 +45,8 @@ export async function fetchWithAuth(url, options = {}) {
         accessToken = getAccessTokenFromStorage()
     }
 
-    // ✅ LOGS DE DEBUG
-    console.log('🔍 DEBUG fetchWithAuth:')
-    console.log('  URL:', url)
-    console.log('  Token en mémoire:', accessToken ? 'OUI ✅' : 'NON ❌')
-    console.log(
-        '  Token (premiers chars):',
-        accessToken ? accessToken.substring(0, 20) + '...' : 'null'
-    )
+
+
 
     if (!accessToken) {
         console.error('❌ Pas de token disponible!')
@@ -64,11 +58,11 @@ export async function fetchWithAuth(url, options = {}) {
         Authorization: `Bearer ${accessToken}`,
     }
 
-    console.log('  Headers:', headers)
+
 
     const res = await fetch(url, { ...options, headers, credentials: 'include' })
 
-    console.log('  Réponse status:', res.status)
+
 
     if (res.status === 401) {
         console.log('  ⚠️ 401 reçu, tentative de refresh...')
