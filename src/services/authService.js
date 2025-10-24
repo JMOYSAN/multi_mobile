@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
-const API_URL = 'http://10.0.0.33:3000'
+import { API_URL } from '@env'
 
 let accessToken = null
 let refreshToken = null // ← AJOUTE ÇA

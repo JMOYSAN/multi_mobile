@@ -145,7 +145,9 @@ export default function ChatScreen({ route, navigation }) {
             >
                 <TopBar
                     currentGroupe={currentGroupe}
+                    currentUser={currentUser}
                     participants={participants}
+                    navigation={navigation}
                     onClose={() => navigation.goBack()}
                 />
 
