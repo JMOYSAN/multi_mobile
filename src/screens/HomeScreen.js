@@ -28,13 +28,20 @@ export default function HomeScreen({ navigation }) {
         </>
     ) : (
         <>
-           
+            <View style={{ marginTop: 10 }}>
+                <Button
+                    title="Voir les Utilisateurs"
+                    onPress={() => navigation.navigate('Users')}
+                />
+            </View>
+
             <View style={{ marginTop: 10 }}>
                 <Button
                     title="Voir les groupes"
-                    onPress={() => navigation.navigate('Utilisateurs')}
+                    onPress={() => navigation.navigate('Groupes')}
                 />
             </View>
+
             <View style={{ marginTop: 10 }}>
                 <Button title="Se déconnecter" onPress={logout} color="#d32f2f" />
             </View>

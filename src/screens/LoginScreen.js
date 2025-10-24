@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import styled from 'styled-components/native'
 import { API_URL } from '@env'
+import {useAuth} from "../context/AuthContext";
+import { Text, Alert } from 'react-native';
 
 const LoginWrapper = styled.View`
     flex: 1;
