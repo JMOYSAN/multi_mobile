@@ -8,6 +8,8 @@ import {
     Platform,
     SafeAreaView,
 } from 'react-native';
+
+
 import ChatInput from '../components/messages/ChatInput';
 import MessageBubble from '../components/messages/MessageBubble';
 import MessageBubbleOther from '../components/messages/MessageBubbleOther';
@@ -20,6 +22,8 @@ import {
 } from '../services/messageService.js';
 import { fetchWithAuth } from '../services/authService.js';
 import { API_URL } from '@env';
+
+
 
 export default function ChatScreen({ route, navigation }) {
     const { currentUser, currentGroupe } = route.params;
