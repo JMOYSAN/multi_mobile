@@ -1,29 +1,39 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
-export default function MessageBubble({ message, mine, author }) {
+export default function MessageBubble({ message }) {
     return (
-        <View style={[styles.row, mine ? styles.rowRight : styles.rowLeft]}>
-            <View style={[styles.bubble, mine ? styles.mine : styles.other]}>
-                <Text style={styles.author}>{author}</Text>
-                <Text style={styles.content}>{message.content}</Text>
+        <View style={styles.container}>
+            <View style={styles.bubble}>
+                <Text style={styles.text}>{message.content}</Text>
+                {message.pending && <Text style={styles.status}>⏳</Text>}
+                {message.error && <Text style={styles.status}>❌</Text>}
             </View>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    row: { marginVertical: 4, flexDirection: 'row' },
-    rowLeft: { justifyContent: 'flex-start' },
-    rowRight: { justifyContent: 'flex-end' },
-    bubble: {
-        maxWidth: '78%',
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        borderRadius: 12,
+    container: {
+        alignSelf: 'flex-end',
+        marginVertical: 4,
+        marginHorizontal: 10,
+        maxWidth: '75%',
     },
-    mine: { backgroundColor: '#DCF8C6', borderTopRightRadius: 4 },
-    other: { backgroundColor: '#EEE', borderTopLeftRadius: 4 },
-    author: { fontSize: 11, color: '#666', marginBottom: 2 },
-    content: { fontSize: 15, color: '#222' },
+    bubble: {
+        backgroundColor: '#0078fe', // blue
+        padding: 10,
+        borderRadius: 15,
+        borderBottomRightRadius: 0,
+    },
+    text: {
+        color: '#fff',
+        fontSize: 16,
+    },
+    status: {
+        fontSize: 10,
+        color: '#d0d0d0',
+        marginTop: 2,
+        textAlign: 'right',
+    },
 });
