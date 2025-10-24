@@ -34,6 +34,7 @@ export default function ChatScreen({ route, navigation }) {
 
     const log = (...args) => console.log('[ChatScreen]', ...args);
 
+    // ---- Fetch participants ----
     const loadParticipants = async () => {
         if (!currentGroupe?.id) {
             log('No currentGroupe.id → skipping participant load');
@@ -54,6 +55,7 @@ export default function ChatScreen({ route, navigation }) {
         }
     };
 
+    // ---- Fetch messages ----
     const loadMessages = async () => {
         if (!currentGroupe?.id) {
             log('No currentGroupe.id → skipping message load');
@@ -73,6 +75,7 @@ export default function ChatScreen({ route, navigation }) {
         }
     };
 
+    // ---- Lazy load older messages ----
     const loadMoreMessages = async () => {
         if (!hasMore || pending || messages.length === 0) {
             log(
@@ -100,8 +103,13 @@ export default function ChatScreen({ route, navigation }) {
         }
     };
 
+    // ---- Send message ----
     const handleSend = async (contenu) => {
         log('handleSend called with contenu:', contenu);
+
+        log('🧩 currentUser.id =', currentUser.id);
+        log('🧩 msg.user_id =', msg.user_id);
+
         if (!contenu?.message?.trim() || !currentUser || !currentGroupe) {
             log('Send skipped → invalid params');
             return;
@@ -111,7 +119,8 @@ export default function ChatScreen({ route, navigation }) {
         const content = contenu.message;
         try {
             log('Sending message →', { userId, groupId, content });
-            const msg = await sendMessage(userId, groupId, content);
+            const msg = await sendMessage(groupId, content);
+
             log('Send response:', msg);
             setMessages((prev) => [...prev, msg]);
             if (flatListRef.current)
@@ -121,11 +130,31 @@ export default function ChatScreen({ route, navigation }) {
         }
     };
 
+    // ---- Load on group change ----
     useEffect(() => {
         log('useEffect → currentGroupe changed:', currentGroupe);
         loadMessages();
         loadParticipants();
     }, [currentGroupe]);
+
+    // ---- Merge usernames once participants or messages change ----
+    useEffect(() => {
+        if (participants.length && messages.length) {
+            const merged = messages.map((m) => {
+                const p = participants.find((p) => p.id === m.user_id);
+                return {
+                    ...m,
+                    username: p
+                        ? p.username
+                        : m.user_id === currentUser.id
+                            ? currentUser.nom || 'Moi'
+                            : 'Inconnu',
+                };
+            });
+            setMessages(merged);
+            log('Messages merged with participants →', merged.length);
+        }
+    }, [participants]);
 
     useEffect(() => {
         log('Messages updated → count:', messages.length);
@@ -136,6 +165,7 @@ export default function ChatScreen({ route, navigation }) {
             (p) => p.isTyping && p.username !== currentUser?.username
         ) || [];
 
+    // ---- Render ----
     return (
         <SafeAreaView style={styles.safe}>
             <KeyboardAvoidingView
@@ -168,7 +198,7 @@ export default function ChatScreen({ route, navigation }) {
                     renderItem={({ item }) => {
                         const mine = item.user_id === currentUser.id;
                         log(
-                            `Render msg id=${item.id} user_id=${item.user_id} → ${
+                            `Render msg id=${item.id} user_id=${item.user_id} username=${item.username} → ${
                                 mine ? 'MINE ✅' : 'OTHER 💬'
                             }`
                         );

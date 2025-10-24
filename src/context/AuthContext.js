@@ -1,12 +1,13 @@
-import {
+import React, {
     createContext,
     useContext,
     useCallback,
     useEffect,
     useState,
     useRef,
-} from 'react'
-import { Appearance } from 'react-native' // Import pour gérer le thème
+} from "react";
+import { Appearance } from "react-native";
+import jwtDecode from "jwt-decode";
 import {
     login as loginService,
     register as registerService,
@@ -18,104 +19,121 @@ import {
     refreshToken as refreshTokenService,
     setAccessToken,
     getAccessToken,
-} from '../services/authService.js'
+} from "../services/authService.js";
 
-const AuthContext = createContext(null)
+const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-    const [currentUser, setCurrentUser] = useState(null)
-    const [isConnect, setIsConnect] = useState(false)
-    const [pending, setPending] = useState(false)
-    const [error, setError] = useState('')
-    const accessTokenRef = useRef(null)
+    const [currentUser, setCurrentUser] = useState(null);
+    const [isConnect, setIsConnect] = useState(false);
+    const [pending, setPending] = useState(false);
+    const [error, setError] = useState("");
+    const accessTokenRef = useRef(null);
 
+    // ---------- WRAPPER ----------
     const runWithPending = useCallback(async (task) => {
-        setPending(true)
-        setError('')
+        setPending(true);
+        setError("");
         try {
-            return await task()
+            return await task();
         } catch (err) {
-            setError(err.message)
-            throw err
+            setError(err.message);
+            throw err;
         } finally {
-            setPending(false)
+            setPending(false);
         }
-    }, [])
+    }, []);
 
-    useEffect(() => {
-        const initAuth = async () => {
-            const storedUser = await loadUserFromStorage()
-            if (storedUser) {
-                setCurrentUser(storedUser)
-                setIsConnect(true)
-                refreshAccessToken()
-            }
-        }
-        initAuth()
-    }, [])
-
+    // ---------- REFRESH TOKEN ----------
     const refreshAccessToken = useCallback(async () => {
         try {
-            const success = await refreshTokenService()
+            const success = await refreshTokenService();
             if (success) {
-                const token = getAccessToken()
-                accessTokenRef.current = token
+                const token = getAccessToken();
+                accessTokenRef.current = token;
             }
         } catch {
-            logout()
+            logout();
         }
-    }, [])
+    }, []);
 
+    // ---------- INIT ----------
     useEffect(() => {
-        if (currentUser?.theme) {
-            const colorScheme = currentUser.theme === 'light' ? 'light' : 'dark'
-            console.log('📱 Thème actif:', colorScheme)
-        }
-    }, [currentUser?.theme])
+        const initAuth = async () => {
+            const storedUser = await loadUserFromStorage();
+            if (storedUser) {
+                setCurrentUser(storedUser);
+                setIsConnect(true);
+                await refreshAccessToken();
+            }
+        };
+        initAuth();
+    }, [refreshAccessToken]);
 
+    // ---------- LOGIN ----------
     const login = useCallback(
         async (username, password) => {
-            const data = await runWithPending(() => loginService(username, password))
+            const data = await runWithPending(() => loginService(username, password));
 
-            setCurrentUser(data.user)
-            await saveUserToStorage(data.user, data.accessToken)
-            accessTokenRef.current = data.accessToken
-            setAccessToken(data.accessToken)
-            setIsConnect(true)
+            let realUser = data.user;
+            try {
+                const decoded = jwtDecode(data.accessToken);
+                console.log("🔍 Decoded token payload:", decoded);
+                realUser = { ...realUser, id: decoded.id, username: decoded.username };
+            } catch (err) {
+                console.warn("⚠️ Token decode failed, using backend user only");
+            }
 
-            return data.user
+            setCurrentUser(realUser);
+            await saveUserToStorage(realUser, data.accessToken);
+            accessTokenRef.current = data.accessToken;
+            setAccessToken(data.accessToken);
+            setIsConnect(true);
+
+            return realUser;
         },
         [runWithPending]
-    )
+    );
 
+    // ---------- REGISTER ----------
     const register = useCallback(
         async (username, password) => {
             const user = await runWithPending(() =>
                 registerService(username, password)
-            )
-            return user
+            );
+            return user;
         },
         [runWithPending]
-    )
+    );
 
+    // ---------- LOGOUT ----------
     const logout = useCallback(async () => {
-        await logoutService()
-        await clearUserFromStorage()
-        accessTokenRef.current = null
-        setCurrentUser(null)
-        setIsConnect(false)
-    }, [])
+        await logoutService();
+        await clearUserFromStorage();
+        accessTokenRef.current = null;
+        setCurrentUser(null);
+        setIsConnect(false);
+    }, []);
 
+    // ---------- THEME ----------
     const toggleTheme = useCallback(async () => {
-        if (!currentUser) return
-        const newTheme = currentUser.theme === 'dark' ? 'light' : 'dark'
+        if (!currentUser) return;
+        const newTheme = currentUser.theme === "dark" ? "light" : "dark";
         const updatedUser = await runWithPending(() =>
             updateThemeService(currentUser.id, newTheme)
-        )
-        setCurrentUser(updatedUser)
-        await saveUserToStorage(updatedUser)
-    }, [currentUser, runWithPending])
+        );
+        setCurrentUser(updatedUser);
+        await saveUserToStorage(updatedUser);
+    }, [currentUser, runWithPending]);
 
+    useEffect(() => {
+        if (currentUser?.theme) {
+            const colorScheme = currentUser.theme === "light" ? "light" : "dark";
+            console.log("📱 Thème actif:", colorScheme);
+        }
+    }, [currentUser?.theme]);
+
+    // ---------- VALUE ----------
     const value = {
         currentUser,
         setCurrentUser,
@@ -128,15 +146,15 @@ export function AuthProvider({ children }) {
         error,
         accessTokenRef,
         refreshAccessToken,
-    }
+    };
 
-    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+// ---------- CUSTOM HOOK ----------
 export function useAuth() {
-    const context = useContext(AuthContext)
-    if (!context) {
-        throw new Error('useAuth doit être utilisé dans un AuthProvider')
-    }
-    return context
+    const context = useContext(AuthContext);
+    if (!context)
+        throw new Error("useAuth doit être utilisé dans un AuthProvider");
+    return context;
 }
