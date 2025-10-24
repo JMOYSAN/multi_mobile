@@ -9,7 +9,6 @@ import {
     SafeAreaView,
 } from 'react-native';
 
-import { useMessageNotifications } from '../hooks/useMessageNotifications';
 
 import ChatInput from '../components/messages/ChatInput';
 import MessageBubble from '../components/messages/MessageBubble';
@@ -24,7 +23,7 @@ import {
 import { fetchWithAuth } from '../services/authService.js';
 import { API_URL } from '@env';
 
-const { showMessageNotification } = useMessageNotifications(currentUser, currentGroupe);
+
 
 export default function ChatScreen({ route, navigation }) {
     const { currentUser, currentGroupe } = route.params;

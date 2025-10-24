@@ -1,20 +1,20 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { useTheme } from '../contexts/ThemeContext'; // adjust path if needed
+import { useTheme } from '../context/ThemeContext';
 
 export default function ThemeToggleButton() {
     const { theme, setTheme, colors } = useTheme();
 
-    const toggleTheme = () => {
+    const toggle = () => {
         setTheme(theme === 'dark' ? 'light' : 'dark');
     };
 
     return (
         <TouchableOpacity
-            onPress={toggleTheme}
-            style={[styles.button, { backgroundColor: colors.primary }]}
+            onPress={toggle}
+            style={[styles.btn, { backgroundColor: colors.cardBackground }]}
         >
-            <Text style={[styles.text, { color: colors.text }]}>
+            <Text style={{ color: colors.text }}>
                 {theme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode'}
             </Text>
         </TouchableOpacity>
@@ -22,15 +22,10 @@ export default function ThemeToggleButton() {
 }
 
 const styles = StyleSheet.create({
-    button: {
-        paddingVertical: 10,
-        paddingHorizontal: 20,
-        borderRadius: 20,
+    btn: {
+        padding: 10,
+        borderRadius: 8,
         alignSelf: 'center',
         marginVertical: 10,
-    },
-    text: {
-        fontSize: 16,
-        fontWeight: '600',
     },
 });
