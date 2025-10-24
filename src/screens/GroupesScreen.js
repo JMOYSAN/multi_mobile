@@ -82,7 +82,9 @@ export default function GroupesScreen({ navigation }) {
             }
         },
         [joinGroupe, loadGroupMembers, navigation, currentUser]
-    )
+    );
+
+
 
     const handleRefresh = async () => {
         setIsRefreshing(true)
@@ -164,10 +166,7 @@ export default function GroupesScreen({ navigation }) {
                 {pending && <ActivityIndicator size="large" style={{ marginTop: 20 }} />}
 
                 <View style={{ marginTop: 30 }}>
-                    <Button
-                        title="Retour à l'accueil"
-                        onPress={() => navigation.navigate('Home')}
-                    />
+                    <Button title="Retour à l'accueil" onPress={() => navigation.navigate('Home')} />
                 </View>
             </ScrollView>
         </View>
@@ -181,8 +180,12 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingTop: 20,
     },
-    scroll: { flex: 1 },
-    scrollContent: { paddingBottom: 40 },
+    scroll: {
+        flex: 1,
+    },
+    scrollContent: {
+        paddingBottom: 40,
+    },
     sectionTitle: {
         fontSize: 20,
         fontWeight: 'bold',
@@ -196,22 +199,9 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         marginBottom: 10,
     },
-    groupName: { fontSize: 16, color: '#2c3639' },
-    createRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 10,
-    },
-    input: {
-        flex: 1,
-        borderWidth: 1,
-        borderColor: '#a27b5c',
-        borderRadius: 8,
-        paddingHorizontal: 10,
-        paddingVertical: 8,
-        marginRight: 10,
-        backgroundColor: '#fff',
-        color: '#000',
+    groupName: {
+        fontSize: 16,
+        color: '#2c3639',
     },
     createButton: {
         backgroundColor: '#3f4e4f',
