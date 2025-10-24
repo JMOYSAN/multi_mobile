@@ -6,6 +6,7 @@ import {
     sendMessage,
 } from '../services/messageService.js'
 import { fetchGroupMembers } from '../services/groupService.js'
+import { API_URL, WS_URL } from '@env'
 
 export function useMessages(currentGroupe, currentUser) {
     const [messages, setMessages] = useState([])
@@ -23,7 +24,6 @@ export function useMessages(currentGroupe, currentUser) {
         }
     }, [])
 
-    // Charger les membres du groupe
     useEffect(() => {
         if (!currentGroupe?.id) return
         runWithPending(async () => {
@@ -34,7 +34,6 @@ export function useMessages(currentGroupe, currentUser) {
         })
     }, [currentGroupe?.id, runWithPending])
 
-    // Charger les messages initiaux
     useEffect(() => {
         if (!currentGroupe?.id) return
         setMessages([])
@@ -48,7 +47,6 @@ export function useMessages(currentGroupe, currentUser) {
             .catch((err) => console.error('Erreur récupération messages:', err))
     }, [currentGroupe?.id, runWithPending])
 
-    // Charger les messages plus anciens
     const loadMoreMessages = useCallback(async () => {
         if (!hasMore || !currentGroupe?.id || messages.length === 0 || pending)
             return
@@ -76,32 +74,21 @@ export function useMessages(currentGroupe, currentUser) {
                 sendMessage(currentUser.id, currentGroupe.id, contenu.message)
             )
 
+            setMessages((prev) => [newMsg, ...prev])
+
             return newMsg
         },
         [currentUser?.id, currentGroupe?.id, runWithPending]
     )
 
-    // ✅ WebSocket live sync from Redis
     useEffect(() => {
         if (!currentUser?.id) return
 
-        ws.current = new WebSocket(`ws://localhost:3000?user=${currentUser.id}`)
+        ws.current = new WebSocket(`${WS_URL}?user=${currentUser.id}`)
 
         ws.current.onopen = () => console.log('[useMessages] WS connected')
         ws.current.onclose = () => console.log('[useMessages] WS closed')
         ws.current.onerror = (err) => console.error('[useMessages] WS error:', err)
-
-        ws.current.onmessage = (event) => {
-            try {
-                const data = JSON.parse(event.data)
-                if (data.type === 'message' && data.group_id === currentGroupe?.id) {
-                    console.log('[useMessages] incoming live:', data)
-                    setMessages((prev) => [data, ...prev])
-                }
-            } catch (err) {
-                console.error('[useMessages] parse error:', err)
-            }
-        }
 
         return () => {
             if (ws.current) {
