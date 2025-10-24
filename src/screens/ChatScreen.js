@@ -34,15 +34,12 @@ export default function ChatScreen({ route, navigation }) {
 
     const log = (...args) => console.log('[ChatScreen]', ...args);
 
-    // ✅ Fixed endpoint
     const loadParticipants = async () => {
         if (!currentGroupe?.id) {
             log('No currentGroupe.id → skipping participant load');
             return;
         }
         const url = `${API_URL}/groups-users/group/${currentGroupe.id}`;
-
-
         log('Fetching participants from:', url);
         try {
             const res = await fetchWithAuth(url);
@@ -159,7 +156,7 @@ export default function ChatScreen({ route, navigation }) {
                 <FlatList
                     ref={flatListRef}
                     data={messages}
-                    keyExtractor={(item) => item.id.toString()}
+                    keyExtractor={(item, index) => `${item.id || 'tmp'}-${index}`}
                     contentContainerStyle={styles.messagesContainer}
                     onEndReached={loadMoreMessages}
                     onEndReachedThreshold={0.2}
@@ -169,8 +166,13 @@ export default function ChatScreen({ route, navigation }) {
                         ) : null
                     }
                     renderItem={({ item }) => {
-                        log('Render message id:', item.id);
-                        return item.user_id === currentUser.id ? (
+                        const mine = item.user_id === currentUser.id;
+                        log(
+                            `Render msg id=${item.id} user_id=${item.user_id} → ${
+                                mine ? 'MINE ✅' : 'OTHER 💬'
+                            }`
+                        );
+                        return mine ? (
                             <MessageBubble message={item} />
                         ) : (
                             <MessageBubbleOther message={item} />
