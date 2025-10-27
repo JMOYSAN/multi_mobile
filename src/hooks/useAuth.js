@@ -1,4 +1,3 @@
-const API_URL = 'http://localhost:3000'
 
 let accessToken = null
 
@@ -45,9 +44,6 @@ export async function fetchWithAuth(url, options = {}) {
         accessToken = getAccessTokenFromStorage()
     }
 
-
-
-
     if (!accessToken) {
         console.error('❌ Pas de token disponible!')
         throw new Error("Token d'accès manquant")
@@ -58,11 +54,7 @@ export async function fetchWithAuth(url, options = {}) {
         Authorization: `Bearer ${accessToken}`,
     }
 
-
-
     const res = await fetch(url, { ...options, headers, credentials: 'include' })
-
-
 
     if (res.status === 401) {
         console.log('  ⚠️ 401 reçu, tentative de refresh...')

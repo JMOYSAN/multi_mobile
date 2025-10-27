@@ -117,9 +117,9 @@ export default function GroupesScreen({ navigation }) {
                     loadMoreGroups('public')
                     loadMoreGroups('private')
                 }}
-                refreshControl={
-                    <ActivityIndicator animating={isRefreshing || pending} size="small" />
-                }
+                // refreshControl={
+                //     <ActivityIndicator animating={isRefreshing || pending} size="small" />
+                // }
             >
                 <Text style={styles.sectionTitle}>Créer un groupe</Text>
                 <View style={styles.createRow}>

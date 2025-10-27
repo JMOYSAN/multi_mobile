@@ -20,6 +20,7 @@ export default function RootNavigator() {
         >
             <Stack.Screen name="Home" component={HomeScreen} options={{ title: 'Accueil' }} />
             <Stack.Screen name="Login" component={LoginScreen} options={{ title: 'Connexion' }} />
+            <Stack.Screen name="Register" component={RegisterScreen} options={{ title: 'Register' }} />
             <Stack.Screen name="Groupes" component={GroupesScreen} options={{ title: 'Groupes' }} />
             <Stack.Screen name="ChatScreen" component={ChatScreen} options={{ title: 'Discussion' }} />
             <Stack.Screen name="Users" component={UserScreen} options={{ title: 'Users' }} />
