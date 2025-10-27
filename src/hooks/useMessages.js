@@ -1,4 +1,3 @@
-// hooks/useMessages.js
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
     fetchMessages,
@@ -6,7 +5,7 @@ import {
     sendMessage,
 } from '../services/messageService.js'
 import { fetchGroupMembers } from '../services/groupService.js'
-import { API_URL, WS_URL } from '@env'
+import { WS_URL } from '@env'
 
 export function useMessages(currentGroupe, currentUser) {
     const [messages, setMessages] = useState([])
@@ -24,6 +23,7 @@ export function useMessages(currentGroupe, currentUser) {
         }
     }, [])
 
+    // Charger les membres du groupe
     useEffect(() => {
         if (!currentGroupe?.id) return
         runWithPending(async () => {
@@ -34,6 +34,7 @@ export function useMessages(currentGroupe, currentUser) {
         })
     }, [currentGroupe?.id, runWithPending])
 
+    // Charger les messages initiaux
     useEffect(() => {
         if (!currentGroupe?.id) return
         setMessages([])
@@ -47,10 +48,10 @@ export function useMessages(currentGroupe, currentUser) {
             .catch((err) => console.error('Erreur récupération messages:', err))
     }, [currentGroupe?.id, runWithPending])
 
+    // Pagination
     const loadMoreMessages = useCallback(async () => {
         if (!hasMore || !currentGroupe?.id || messages.length === 0 || pending)
             return
-
         const oldestMessage = messages[messages.length - 1]
         const beforeId = oldestMessage.id
 
@@ -74,21 +75,37 @@ export function useMessages(currentGroupe, currentUser) {
                 sendMessage(currentUser.id, currentGroupe.id, contenu.message)
             )
 
+            // Optimistic render
             setMessages((prev) => [newMsg, ...prev])
-
             return newMsg
         },
         [currentUser?.id, currentGroupe?.id, runWithPending]
     )
 
+    // WebSocket connection + live update
     useEffect(() => {
         if (!currentUser?.id) return
-
         ws.current = new WebSocket(`${WS_URL}?user=${currentUser.id}`)
 
         ws.current.onopen = () => console.log('[useMessages] WS connected')
         ws.current.onclose = () => console.log('[useMessages] WS closed')
         ws.current.onerror = (err) => console.error('[useMessages] WS error:', err)
+
+        ws.current.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data)
+                if (data.type === 'message' && data.group_id === currentGroupe?.id) {
+                    setMessages((prev) => {
+                        const already = data.user_id === currentUser.id
+                        console.log("PREV: ", prev)
+                        console.log('Duplicate check →', already, 'for message:', data)
+                        return already ? prev : [data, ...prev]
+                    })
+                }
+            } catch (err) {
+                console.error('[useMessages] parse error:', err)
+            }
+        }
 
         return () => {
             if (ws.current) {
@@ -98,12 +115,5 @@ export function useMessages(currentGroupe, currentUser) {
         }
     }, [currentUser?.id, currentGroupe?.id])
 
-    return {
-        messages,
-        members,
-        send,
-        loadMoreMessages,
-        hasMore,
-        pending,
-    }
+    return { messages, members, send, loadMoreMessages, hasMore, pending }
 }

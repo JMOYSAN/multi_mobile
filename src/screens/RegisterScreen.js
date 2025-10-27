@@ -86,7 +86,7 @@ export default function RegisterScreen({navigation}) {
             return
         }
 
-        fetch(`${API_URL}3000/users/register`, {
+        fetch(`${API_URL}/auth/register`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({username, password}),
