@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
         borderRadius: 5,
         marginRight: 10,
     },
-    statutonline: {
+    /*statutonline: {
         backgroundColor: '#4caf50',
     },
     statutoffline: {
@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
     },
     statutaway: {
         backgroundColor: '#ff9800',
-    },
+    },*/
     avatar: {
         width: 40,
         height: 40,

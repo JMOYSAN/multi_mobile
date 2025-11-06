@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import styled from 'styled-components/native'
-import { API_URL } from '@env'
 import {useAuth} from "../context/AuthContext";
-import { Text, Alert } from 'react-native';
+import {Text, Alert, StyleSheet} from 'react-native';
 
 const LoginWrapper = styled.View`
     flex: 1;
@@ -106,7 +105,7 @@ export default function LoginScreen({ navigation }) {
                 />
 
                 {authError ? (
-                    <Title style={{ color: 'red', fontSize: 14 }}>{authError}</Title>
+                    <Title style={styles.title}>{authError}</Title>
                 ) : null}
 
                 <Button onPress={handleSubmit} disabled={pending}>
@@ -121,3 +120,8 @@ export default function LoginScreen({ navigation }) {
         </LoginWrapper>
     )
 }
+const styles = StyleSheet.create({
+    title: {
+        color: 'red', fontSize: 14
+    },
+});

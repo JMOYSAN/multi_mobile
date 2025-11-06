@@ -1,7 +1,7 @@
 import React from 'react'
 import {View, Text, TouchableOpacity, StyleSheet, Alert} from 'react-native'
-import {addUserToGroup, leaveGroup} from "../services/groupService";
-import GroupesScreen from "../screens/GroupesScreen";
+import {leaveGroup} from "../services/groupService";
+
 
 const TopBar = ({
                     currentGroupe,
@@ -66,8 +66,8 @@ const styles = StyleSheet.create({
     info: { flex: 1, marginLeft: 12 },
     groupeName: { fontSize: 18, fontWeight: '700', color: '#222' },
     participants: { fontSize: 14, color: '#555' },
-    addButton: { padding: 8, marginRight: 8 },
-    addText: { fontSize: 14, color: '#3f4e4f', fontWeight: 'bold' },
+    /*addButton: { padding: 8, marginRight: 8 },
+    addText: { fontSize: 14, color: '#3f4e4f', fontWeight: 'bold' },*/
     leaveButton: { padding: 8 },
     leaveText: { fontSize: 14, color: '#b22222', fontWeight: 'bold' },
 })

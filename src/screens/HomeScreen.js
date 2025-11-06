@@ -31,7 +31,7 @@ export default function HomeScreen({ navigation }) {
                         onPress={() => navigation.navigate('Login')}
                         color={dynamicButtonColor}
                     />
-                    <View style={{ marginTop: 10 }}>
+                    <View style={styles.button}>
                         <Button
                             title="Créer un compte"
                             onPress={() => navigation.navigate('Register')}
@@ -41,7 +41,7 @@ export default function HomeScreen({ navigation }) {
                 </>
             ) : (
                 <>
-                    <View style={{ marginTop: 10 }}>
+                    <View style={styles.button}>
                         <Button
                             title="Voir les Utilisateurs"
                             onPress={() => navigation.navigate('Users')}
@@ -49,7 +49,7 @@ export default function HomeScreen({ navigation }) {
                         />
                     </View>
 
-                    <View style={{ marginTop: 10 }}>
+                    <View style={styles.button}>
                         <Button
                             title="Voir les Groupes"
                             onPress={() => navigation.navigate('Groupes')}
@@ -57,7 +57,7 @@ export default function HomeScreen({ navigation }) {
                         />
                     </View>
 
-                    <View style={{ marginTop: 10 }}>
+                    <View style={styles.button}>
                         <Button
                             title="Se déconnecter"
                             onPress={logout}
@@ -82,4 +82,7 @@ const styles = StyleSheet.create({
         marginBottom: 20,
         textAlign: 'center',
     },
+    button: {
+        marginTop: 10
+    }
 });
