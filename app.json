@@ -27,6 +27,12 @@
     },
     "plugins": [
       "expo-secure-store"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "ee207b46-446f-4e6a-b963-2567d9184bd2"
+      }
+    },
+    "owner": "felty8"
   }
 }
