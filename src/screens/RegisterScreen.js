@@ -1,6 +1,6 @@
 import {useState} from 'react'
 import styled from 'styled-components/native'
-import {Text} from "react-native";
+import {StyleSheet, Text} from "react-native";
 import { API_URL } from '@env'
 
 const RegisterWrapper = styled.View`
@@ -133,10 +133,10 @@ export default function RegisterScreen({navigation}) {
                 />
 
                 {error ? (
-                    <Title style={{color: 'red', fontSize: 14}}>{error}</Title>
+                    <Title style={styles.error}>{error}</Title>
                 ) : null}
                 {success ? (
-                    <Title style={{color: 'green', fontSize: 14}}>{success}</Title>
+                    <Title style={styles.success}>{success}</Title>
                 ) : null}
 
                 <Button onPress={handleSubmit}>
@@ -151,3 +151,15 @@ export default function RegisterScreen({navigation}) {
         </RegisterWrapper>
     )
 }
+
+
+const styles = StyleSheet.create({
+    error: {
+        color: 'red',
+        fontSize: 14
+    },
+    success: {
+        color: 'green',
+        fontSize: 14
+    }
+});

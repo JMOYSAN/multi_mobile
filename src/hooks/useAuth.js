@@ -1,3 +1,5 @@
+import AsyncStorage from '@react-native-async-storage/async-storage'
+
 const API_URL = 'http://localhost:3000'
 
 let accessToken = null
@@ -23,7 +25,7 @@ export async function login(username, password) {
 
     accessToken = data.accessToken
 
-    saveUserToStorage(data.user, data.accessToken)
+    await saveUserToStorage(data.user, data.accessToken)
 
     return { user: data.user, accessToken: data.accessToken }
 }
@@ -42,11 +44,8 @@ export async function register(username, password) {
 export async function fetchWithAuth(url, options = {}) {
     // Vérifier le token en mémoire d'abord
     if (!accessToken) {
-        accessToken = getAccessTokenFromStorage()
+        accessToken = await getAccessTokenFromStorage()
     }
-
-
-
 
     if (!accessToken) {
         console.error('❌ Pas de token disponible!')
@@ -58,11 +57,7 @@ export async function fetchWithAuth(url, options = {}) {
         Authorization: `Bearer ${accessToken}`,
     }
 
-
-
     const res = await fetch(url, { ...options, headers, credentials: 'include' })
-
-
 
     if (res.status === 401) {
         console.log('  ⚠️ 401 reçu, tentative de refresh...')
@@ -85,7 +80,7 @@ export async function refreshToken() {
     })
 
     if (!res.ok) {
-        clearUserFromStorage()
+        await clearUserFromStorage()
         accessToken = null
         return false
     }
@@ -93,7 +88,7 @@ export async function refreshToken() {
     const data = await res.json()
     accessToken = data.accessToken
 
-    updateAccessTokenInStorage(data.accessToken)
+    await updateAccessTokenInStorage(data.accessToken)
 
     return true
 }
@@ -104,7 +99,7 @@ export async function logout() {
         credentials: 'include',
     })
     accessToken = null
-    clearUserFromStorage()
+    await clearUserFromStorage()
 }
 
 export async function listPrivateGroups(userId) {
@@ -113,22 +108,20 @@ export async function listPrivateGroups(userId) {
     return res.json()
 }
 
-export function saveUserToStorage(user, token) {
-    if (typeof window === 'undefined') return
+export async function saveUserToStorage(user, token) {
     try {
-        localStorage.setItem('user', JSON.stringify(user))
+        await AsyncStorage.setItem('user', JSON.stringify(user))
         if (token) {
-            localStorage.setItem('accessToken', token)
+            await AsyncStorage.setItem('accessToken', token)
         }
     } catch (err) {
         console.warn("Impossible de sauvegarder l'utilisateur", err)
     }
 }
 
-export function loadUserFromStorage() {
-    if (typeof window === 'undefined') return null
+export async function loadUserFromStorage() {
     try {
-        const stored = localStorage.getItem('user')
+        const stored = await AsyncStorage.getItem('user')
         return stored ? JSON.parse(stored) : null
     } catch (err) {
         console.warn("Impossible de charger l'utilisateur", err)
@@ -136,28 +129,29 @@ export function loadUserFromStorage() {
     }
 }
 
-export function getAccessTokenFromStorage() {
-    if (typeof window === 'undefined') return null
+export async function getAccessTokenFromStorage() {
     try {
-        return localStorage.getItem('accessToken')
+        return await AsyncStorage.getItem('accessToken')
     } catch (err) {
         console.warn('Impossible de charger le token', err)
         return null
     }
 }
 
-export function updateAccessTokenInStorage(token) {
-    if (typeof window === 'undefined') return
+export async function updateAccessTokenInStorage(token) {
     try {
-        localStorage.setItem('accessToken', token)
+        await AsyncStorage.setItem('accessToken', token)
     } catch (err) {
         console.warn('Impossible de mettre à jour le token', err)
     }
 }
 
-export function clearUserFromStorage() {
-    if (typeof window === 'undefined') return
-    localStorage.clear()
+export async function clearUserFromStorage() {
+    try {
+        await AsyncStorage.clear()
+    } catch (err) {
+        console.warn('Impossible de vider le storage', err)
+    }
 }
 
 export function updateUserTheme(userId, newTheme) {

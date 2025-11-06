@@ -6,7 +6,6 @@ import React, {
     useState,
     useRef,
 } from "react";
-import { Appearance } from "react-native";
 import jwtDecode from "jwt-decode";
 import {
     login as loginService,
@@ -81,7 +80,7 @@ export function AuthProvider({ children }) {
                 console.log("🔍 Decoded token payload:", decoded);
                 realUser = { ...realUser, id: decoded.id, username: decoded.username };
             } catch (err) {
-                console.warn("⚠️ Token decode failed, using backend user only");
+                console.warn("⚠️ Token decode failed, using backend user only",err);
             }
 
             setCurrentUser(realUser);
