@@ -15,36 +15,34 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '16'
           cache: 'npm'
 
       - name: Setup Expo
         uses: expo/expo-github-action@v8
         with:
-          expo-version: latest
+          expo-version: 6.x
           token: ${{ secrets.EXPO_TOKEN }}
 
       - name: Install dependencies
         run: npm install
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
 
       - name: Build Android APK
         run: expo build:android -t apk --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
+      - name: Wait for build to complete
+        run: sleep 60
+
       - name: Download Android artifact
         run: |
-          URL=$(expo url:apk --non-interactive)
-          curl -o app.apk $URL
+          expo url:apk > build_url.txt
+          BUILD_URL=$(cat build_url.txt)
+          echo "Build URL: $BUILD_URL"
+          curl -L -o app.apk "$BUILD_URL"
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
       - name: Upload Android artifact
         uses: actions/upload-artifact@v4
@@ -63,13 +61,13 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '16'
           cache: 'npm'
 
       - name: Setup Expo
         uses: expo/expo-github-action@v8
         with:
-          expo-version: latest
+          expo-version: 6.x
           token: ${{ secrets.EXPO_TOKEN }}
 
       - name: Install dependencies
@@ -80,10 +78,17 @@ jobs:
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
+      - name: Wait for build to complete
+        run: sleep 60
+
       - name: Download iOS artifact
         run: |
-          URL=$(expo url:ipa --non-interactive)
-          curl -o app.tar.gz $URL
+          expo url:ipa > build_url.txt
+          BUILD_URL=$(cat build_url.txt)
+          echo "Build URL: $BUILD_URL"
+          curl -L -o app.tar.gz "$BUILD_URL"
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
       - name: Upload iOS artifact
         uses: actions/upload-artifact@v4
