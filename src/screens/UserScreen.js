@@ -6,6 +6,7 @@ import { useGroups } from '../hooks/useGroups'
 
 function LigneUtilisateur({ utilisateur, estUtilisateurActuel, onCreateGroup }) {
     const { nom, statut, avatar } = utilisateur
+    console.log(utilisateur)
     const initiale = nom?.[0]?.toUpperCase() ?? '?'
 
     const handlePress = async () => {
@@ -13,13 +14,21 @@ function LigneUtilisateur({ utilisateur, estUtilisateurActuel, onCreateGroup }) 
         await onCreateGroup(utilisateur)
     }
 
+    // determine color based on statut
+    const statutStyle =
+        statut === 'online'
+            ? styles.statutonline
+            : statut === 'away'
+                ? styles.statutaway
+                : styles.statutoffline
+
     return (
         <TouchableOpacity
             onPress={handlePress}
             disabled={estUtilisateurActuel}
             style={[styles.utilisateurLigne, estUtilisateurActuel && styles.moi]}
         >
-            <View style={[styles.statut, styles[`statut${statut}`]]} />
+            <View style={[styles.statut, statutStyle]} />
             {avatar ? (
                 <Image
                     style={styles.avatar}
@@ -32,6 +41,13 @@ function LigneUtilisateur({ utilisateur, estUtilisateurActuel, onCreateGroup }) 
                 </View>
             )}
             <Text style={styles.nom}>{nom}</Text>
+            <Text style={styles.statutTexte}>
+                {statut === 'online'
+                    ? 'En ligne'
+                    : statut === 'away'
+                        ? 'Absent'
+                        : 'Hors ligne'}
+            </Text>
         </TouchableOpacity>
     )
 }
@@ -57,7 +73,6 @@ export default function UserScreen() {
         }
     }
 
-    // 👇 Fonction qui crée un groupe au clic
     const handleCreateGroup = async (utilisateur) => {
         try {
             const groupName = `${currentUser.username} & ${utilisateur.nom}`
@@ -116,7 +131,7 @@ const styles = StyleSheet.create({
         borderRadius: 5,
         marginRight: 10,
     },
-    /*statutonline: {
+    statutonline: {
         backgroundColor: '#4caf50',
     },
     statutoffline: {
@@ -124,7 +139,12 @@ const styles = StyleSheet.create({
     },
     statutaway: {
         backgroundColor: '#ff9800',
-    },*/
+    },
+    statutTexte: {
+        fontSize: 12,
+        color: '#555',
+        marginLeft: 8,
+    },
     avatar: {
         width: 40,
         height: 40,

@@ -3,7 +3,8 @@ import HomeScreen from '../screens/HomeScreen'
 import LoginScreen from '../screens/LoginScreen'
 import GroupesScreen from '../screens/GroupesScreen'
 import ChatScreen from '../screens/ChatScreen'
-import UserScreen from "../screens/UserScreen";  // import the chat screen
+import UserScreen from "../screens/UserScreen";
+import RegisterScreen from "../screens/RegisterScreen";  // import the chat screen
 
 const Stack = createNativeStackNavigator()
 
@@ -17,6 +18,11 @@ export default function RootNavigator() {
                 contentStyle: { backgroundColor: '#dcd7c9' },
             }}
         >
+            <Stack.Screen
+                name="Register"
+                component={RegisterScreen}
+                options={{ title: 'Inscription' }}
+            />
             <Stack.Screen name="Home" component={HomeScreen} options={{ title: 'Accueil' }} />
             <Stack.Screen name="Login" component={LoginScreen} options={{ title: 'Connexion' }} />
             <Stack.Screen name="Groupes" component={GroupesScreen} options={{ title: 'Groupes' }} />

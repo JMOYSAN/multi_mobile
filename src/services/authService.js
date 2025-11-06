@@ -12,6 +12,35 @@ export function getAccessToken() {
     return accessToken
 }
 
+// --- User presence management ---
+
+export async function setUserOnline(userId) {
+    try {
+        const res = await fetchWithAuth(`${API_URL}/api/users/${userId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ online_status: 'online' }),
+        });
+        if (!res.ok) throw new Error('Erreur lors du passage en ligne');
+    } catch (err) {
+        console.warn('Impossible de définir le statut en ligne', err);
+    }
+}
+
+export async function setUserOffline(userId) {
+    try {
+        const res = await fetchWithAuth(`${API_URL}/api/users/${userId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ online_status: 'offline' }),
+        });
+        if (!res.ok) throw new Error('Erreur lors du passage hors ligne');
+    } catch (err) {
+        console.warn('Impossible de définir le statut hors ligne', err);
+    }
+}
+
+
 export async function login(username, password) {
     const res = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
@@ -192,6 +221,8 @@ export async function updateAccessTokenInStorage(token) {
         console.warn('Impossible de mettre à jour le token', err)
     }
 }
+
+
 
 export async function clearUserFromStorage() {
     try {

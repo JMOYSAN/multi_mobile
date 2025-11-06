@@ -17,7 +17,7 @@ import {
     logout as logoutService,
     refreshToken as refreshTokenService,
     setAccessToken,
-    getAccessToken,
+    getAccessToken, setUserOnline, setUserOffline,
 } from "../services/authService.js";
 
 const AuthContext = createContext(null);
@@ -89,6 +89,9 @@ export function AuthProvider({ children }) {
             setAccessToken(data.accessToken);
             setIsConnect(true);
 
+            await setUserOnline(realUser.id);
+
+
             return realUser;
         },
         [runWithPending]
@@ -108,10 +111,16 @@ export function AuthProvider({ children }) {
     // ---------- LOGOUT ----------
     const logout = useCallback(async () => {
         await logoutService();
+        if (currentUser?.id) {
+            await setUserOffline(currentUser.id);
+        }
         await clearUserFromStorage();
         accessTokenRef.current = null;
         setCurrentUser(null);
         setIsConnect(false);
+
+        await logoutService();
+
     }, []);
 
     // ---------- THEME ----------

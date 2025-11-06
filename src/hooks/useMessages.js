@@ -15,6 +15,8 @@ export function useMessages(currentGroupe, currentUser) {
     const [pending, setPending] = useState(false)
     const ws = useRef(null)
 
+    console.log('Connecting WS to: WS_URL==', WS_URL);
+
     const runWithPending = useCallback(async (task) => {
         setPending(true)
         try {
@@ -90,6 +92,22 @@ export function useMessages(currentGroupe, currentUser) {
         ws.current.onclose = () => console.log('[useMessages] WS closed')
         ws.current.onerror = (err) => console.error('[useMessages] WS error:', err)
 
+        ws.current.onmessage = (event) => {
+            try {
+                const msg = JSON.parse(event.data);
+                if (msg.type === "message") {
+
+                    setMessages((prev) => [msg, ...prev]);
+                }
+
+
+            } catch (err) {
+                console.error("[useMessages] parse error:", err);
+            }
+        };
+
+
+
         return () => {
             if (ws.current) {
                 ws.current.close()
@@ -97,6 +115,7 @@ export function useMessages(currentGroupe, currentUser) {
             }
         }
     }, [currentUser?.id, currentGroupe?.id])
+
 
     return {
         messages,
