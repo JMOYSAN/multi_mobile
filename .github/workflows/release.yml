@@ -84,7 +84,7 @@ jobs:
         run: |
           BUILD_ID=$(eas build:list --platform=ios --limit=1 --json --non-interactive | jq -r '.[0].id')
           echo "Build ID: $BUILD_ID"
-          eas build:download $BUILD_ID
+          npx eas-cli build:download --id="${BUILD_ID}"
           mv *.ipa app-release.ipa
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
