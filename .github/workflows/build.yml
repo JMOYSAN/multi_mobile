@@ -37,15 +37,20 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: Build Android APK
-        run: npx eas-cli build --platform android --profile preview --local --non-interactive
+        run: expo build:android -t apk --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Download Android artifact
+        run: |
+          URL=$(expo url:apk --non-interactive)
+          curl -o app.apk $URL
 
       - name: Upload Android artifact
         uses: actions/upload-artifact@v4
         with:
           name: android-build
-          path: '*.apk'
+          path: 'app.apk'
           retention-days: 7
 
   build-ios:
@@ -70,22 +75,19 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Setup Ruby (for CocoaPods)
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: '3.2'
-
-      - name: Install CocoaPods
-        run: gem install cocoapods
-
       - name: Build iOS
-        run: npx eas-cli build --platform ios --profile preview --local --non-interactive
+        run: expo build:ios -t simulator --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Download iOS artifact
+        run: |
+          URL=$(expo url:ipa --non-interactive)
+          curl -o app.tar.gz $URL
 
       - name: Upload iOS artifact
         uses: actions/upload-artifact@v4
         with:
           name: ios-build
-          path: '*.ipa'
+          path: 'app.tar.gz'
           retention-days: 7
