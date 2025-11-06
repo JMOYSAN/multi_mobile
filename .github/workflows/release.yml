@@ -83,7 +83,9 @@ jobs:
       - name: Download iOS build
         run: |
           BUILD_ID=$(eas build:list --platform=ios --limit=1 --json --non-interactive | jq -r '.[0].id')
-          eas build:download --id=$BUILD_ID --output=./app-release.ipa
+          echo "Build ID: $BUILD_ID"
+          eas build:download $BUILD_ID
+          mv *.ipa app-release.ipa
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
