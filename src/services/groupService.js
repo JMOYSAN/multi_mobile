@@ -2,7 +2,7 @@ import {fetchWithAuth} from './authService.js'
 import {API_URL} from '@env'
 
 export function listPublicGroups() {
-    return fetchWithAuth(`${API_URL}/groups/public`).then((res) => {
+    return fetchWithAuth(`${API_URL}/api/groups/public`).then((res) => {
         if (!res.ok) {
             throw new Error('Erreur lors de la récupération des groupes publics')
         }
@@ -11,7 +11,7 @@ export function listPublicGroups() {
 }
 
 export function fetchGroupMembers(groupId) {
-    return fetchWithAuth(`${API_URL}/groups-users/group/${groupId}`).then(
+    return fetchWithAuth(`${API_URL}/api/groups-users/group/${groupId}`).then(
         (res) => {
             if (!res.ok) {
                 throw new Error('Erreur récupération membres du groupe')
@@ -22,7 +22,7 @@ export function fetchGroupMembers(groupId) {
 }
 
 export function listPrivateGroups(userId) {
-    return fetchWithAuth(`${API_URL}/groups/private/${userId}`).then((res) => {
+    return fetchWithAuth(`${API_URL}/api/groups/private/${userId}`).then((res) => {
         if (!res.ok) {
             throw new Error('Erreur lors de la récupération des groupes privés')
         }
@@ -32,7 +32,7 @@ export function listPrivateGroups(userId) {
 
 export function fetchNextGroups(type, lastGroupId, limit = 20) {
     return fetchWithAuth(
-        `${API_URL}/groups/next/${type}/${lastGroupId}?limit=${limit}`
+        `${API_URL}/api/groups/next/${type}/${lastGroupId}?limit=${limit}`
     ).then((res) => {
         if (!res.ok) {
             throw new Error(`Erreur HTTP ${res.status}`)
@@ -42,7 +42,7 @@ export function fetchNextGroups(type, lastGroupId, limit = 20) {
 }
 
 export function createGroup(name, isPrivate) {
-    return fetchWithAuth(`${API_URL}/groups`, {
+    return fetchWithAuth(`${API_URL}/api/groups`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
@@ -60,7 +60,7 @@ export function createGroup(name, isPrivate) {
 }
 
 export function addUserToGroup(userId, groupId) {
-    return fetchWithAuth(`${API_URL}/groups-users`, {
+    return fetchWithAuth(`${API_URL}/api/groups-users`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({userId, groupId}),
@@ -75,7 +75,7 @@ export function addUserToGroup(userId, groupId) {
 }
 
 export function leaveGroup(groupId, userId) {
-    return fetchWithAuth(`${API_URL}/groups-users/`, {
+    return fetchWithAuth(`${API_URL}/api/groups-users/`, {
         method: 'DELETE',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
@@ -93,7 +93,7 @@ export function leaveGroup(groupId, userId) {
 }
 
 export function getGroupMembers(groupId) {
-    return fetchWithAuth(`${API_URL}/groups-users/group/${groupId}`).then(
+    return fetchWithAuth(`${API_URL}/api/groups-users/group/${groupId}`).then(
         (res) => {
             if (!res.ok) {
                 throw new Error('Erreur lors de la récupération des membres')

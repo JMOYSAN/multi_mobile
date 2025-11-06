@@ -16,7 +16,7 @@ export default function ThemeToggleButton() {
 
         try {
             setLoading(true);
-            const res = await fetchWithAuth(`${API_URL}/users/${currentUser.id}`, {
+            const res = await fetchWithAuth(`${API_URL}/api/users/${currentUser.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ theme: newTheme }),

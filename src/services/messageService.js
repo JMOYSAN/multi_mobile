@@ -2,7 +2,7 @@ import { fetchWithAuth } from './authService.js'
 import { API_URL } from '@env'
 
 export function fetchMessages(groupId, limit = 20) {
-    const url = `${API_URL}/messages/group/${groupId}/lazy?limit=${limit}`
+    const url = `${API_URL}/api/messages/group/${groupId}/lazy?limit=${limit}`
 
     return fetchWithAuth(url).then((res) => {
         if (!res.ok) {
@@ -13,7 +13,7 @@ export function fetchMessages(groupId, limit = 20) {
 }
 
 export function fetchOlderMessages(groupId, beforeId, limit = 20) {
-    const url = `${API_URL}/messages/group/${groupId}/lazy?limit=${limit}&beforeId=${beforeId}`
+    const url = `${API_URL}/api/messages/group/${groupId}/lazy?limit=${limit}&beforeId=${beforeId}`
 
     return fetchWithAuth(url).then((res) => {
         if (!res.ok) {
@@ -26,7 +26,7 @@ export function fetchOlderMessages(groupId, beforeId, limit = 20) {
 export async function sendMessage(userId, groupId, content) {
     console.log("📤 sendMessage()", { userId, groupId, content });
 
-    const res = await fetchWithAuth(`${API_URL}/messages`, {
+    const res = await fetchWithAuth(`${API_URL}/api/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_id: userId, group_id: groupId, content }),
