@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useState, useCallback } from 'react'
 import {
     View,
     Text,
@@ -163,9 +163,9 @@ export default function GroupesScreen({ navigation }) {
                     </TouchableOpacity>
                 ))}
 
-                {pending && <ActivityIndicator size="large" style={{ marginTop: 20 }} />}
+                {pending && <ActivityIndicator size="large" style={styles.activity} />}
 
-                <View style={{ marginTop: 30 }}>
+                <View style={styles.returnButton}>
                     <Button title="Retour à l'accueil" onPress={() => navigation.navigate('Home')} />
                 </View>
             </ScrollView>
@@ -209,6 +209,12 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         paddingHorizontal: 15,
         paddingVertical: 10,
+    },
+    returnButton: {
+        marginTop:30
+    },
+    activity: {
+        marginTop: 20
     },
     disabledButton: { opacity: 0.6 },
     createButtonText: { color: 'white', fontWeight: 'bold' },
