@@ -82,10 +82,10 @@ jobs:
 
       - name: Download iOS build
         run: |
-          BUILD_ID=$(eas build:list --platform=ios --limit=1 --json --non-interactive | jq -r '.[0].id')
-          echo "Build ID: $BUILD_ID"
-          npx eas-cli build:download --id="${BUILD_ID}"
-          mv *.ipa app-release.ipa
+          BUILD_DATA=$(eas build:list --platform=ios --limit=1 --json --non-interactive)
+          BUILD_URL=$(echo "$BUILD_DATA" | jq -r '.[0].artifacts.buildUrl')
+          echo "Build URL: $BUILD_URL"
+          curl -L -o app-release.ipa "$BUILD_URL"
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
