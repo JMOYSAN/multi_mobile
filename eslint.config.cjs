@@ -21,6 +21,8 @@ module.exports = [
                 console: 'readonly',
                 fetch: 'readonly',
                 require: 'readonly',
+                alert: 'readonly',
+                WebSocket: 'readonly',
                 module: 'readonly',
                 process: 'readonly',
             },
@@ -30,7 +32,7 @@ module.exports = [
             'react/jsx-uses-vars': 'error',
             'react-native/no-unused-styles': 'warn',
             'react-native/no-inline-styles': 'warn',
-            'react-native/no-color-literals': 'warn',
+            'react-native/no-color-literals': 'off',
         },
         settings: {
             react: {

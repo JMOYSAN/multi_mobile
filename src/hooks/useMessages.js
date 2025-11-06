@@ -6,7 +6,7 @@ import {
     sendMessage,
 } from '../services/messageService.js'
 import { fetchGroupMembers } from '../services/groupService.js'
-import { API_URL, WS_URL } from '@env'
+import { WS_URL } from '@env'
 
 export function useMessages(currentGroupe, currentUser) {
     const [messages, setMessages] = useState([])
