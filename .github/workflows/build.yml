@@ -80,7 +80,7 @@ jobs:
         run: gem install cocoapods
 
       - name: Build iOS
-        run: npx eas-cli build --platform ios --profile preview --non-interactive --output ./build-output/app.ipa
+        run: npx eas-cli build --platform ios --profile preview --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
