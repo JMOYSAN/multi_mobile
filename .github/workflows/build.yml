@@ -3,7 +3,7 @@ on:
   pull_request:
     branches:
       - master
-
+      - develop
 jobs:
   build-android:
     name: Build Android
