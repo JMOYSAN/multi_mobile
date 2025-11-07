@@ -1,7 +1,11 @@
 import React from 'react'
 import {View, Text, TouchableOpacity, StyleSheet, Alert} from 'react-native'
 import {leaveGroup} from "../services/groupService";
-
+import {useUsers} from "../hooks/useUsers";
+import {addUserToGroup} from "../services/groupService";
+import {
+    listUsers,
+} from '../services/userService.js'
 
 const TopBar = ({
                     currentGroupe,
@@ -12,6 +16,7 @@ const TopBar = ({
                 }) => {
     const groupeName = currentGroupe?.name || 'Discussion'
     const count = participants.length
+
 
     const handleLeave = () => {
         Alert.alert(
@@ -31,6 +36,56 @@ const TopBar = ({
         )
     }
 
+    const handleAdd = async () => {
+        if (!currentGroupe?.id) return;
+
+        Alert.prompt(
+            "Ajouter un membre",
+            "Entrez le nom d'utilisateur à ajouter :",
+            [
+                { text: "Annuler", style: "cancel" },
+                {
+                    text: "Ajouter",
+                    onPress: async (username) => {
+
+                        if (!username?.trim()) return;
+
+                        const users = await listUsers();
+
+                        const user = users.find(
+                            (u) => (u.username || u.nom) === username.trim()
+                        );
+
+                        if (!user) {
+                            setTimeout(() => Alert.alert("Erreur", "Utilisateur introuvable"), 300);
+
+                            return;
+                        }
+
+                        try {
+                            await addUserToGroup(user.id, currentGroupe.id);
+
+                            setTimeout(() => {
+
+                                Alert.alert("Succès", `${user.username || user.nom} ajouté au groupe`);
+
+                            }, 300);
+                        } catch (err) {
+                            console.error("Erreur ajout utilisateur:", err);
+                            setTimeout(() => {
+                                Alert.alert("Erreur", "Impossible d’ajouter cet utilisateur");
+                            }, 300);
+                        }
+                    },
+                },
+            ],
+            "plain-text"
+        );
+    };
+
+
+
+
     return (
         <View style={styles.container}>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
@@ -43,6 +98,10 @@ const TopBar = ({
                     {count} participant{count > 1 ? 's' : ''}
                 </Text>
             </View>
+            {/* Add button */}
+            <TouchableOpacity onPress={handleAdd} style={styles.addButton}>
+                <Text style={styles.addText}>Ajouter</Text>
+            </TouchableOpacity>
             {/* Quit button */}
             <TouchableOpacity onPress={handleLeave} style={styles.leaveButton}>
                 <Text style={styles.leaveText}>Quitter</Text>
@@ -69,7 +128,9 @@ const styles = StyleSheet.create({
     /*addButton: { padding: 8, marginRight: 8 },
     addText: { fontSize: 14, color: '#3f4e4f', fontWeight: 'bold' },*/
     leaveButton: { padding: 8 },
-    leaveText: { fontSize: 14, color: '#b22222', fontWeight: 'bold' },
+    leaveText: { fontSize: 14, color: '#c56464', fontWeight: 'bold' },
+    addButton: { padding: 8 },
+    addText: { fontSize: 14, color: '#4da532', fontWeight: 'bold' },
 })
 
 export default TopBar

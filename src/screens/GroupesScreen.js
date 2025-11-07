@@ -11,8 +11,13 @@ import {
     TextInput,
 } from 'react-native'
 import { useGroups } from '../hooks/useGroups'
-import { createGroup } from '../services/groupService'
+import {
+    createGroup,
+    listPublicGroups,
+    listPrivateGroups,
+} from '../services/groupService'
 import {useAuth} from "../context/AuthContext";
+
 
 export default function GroupesScreen({ navigation }) {
     const {currentUser} = useAuth()
@@ -21,6 +26,7 @@ export default function GroupesScreen({ navigation }) {
         joinGroupe,
         loadMoreGroups,
         loadGroupMembers,
+        setGroupes,
         pending,
     } = useGroups(currentUser)
 
@@ -87,26 +93,83 @@ export default function GroupesScreen({ navigation }) {
 
 
     const handleRefresh = async () => {
-        setIsRefreshing(true)
-        await loadMoreGroups('public')
-        await loadMoreGroups('private')
-        setIsRefreshing(false)
-    }
+        try {
+            setIsRefreshing(true);
 
-    const handleCreateGroup = () => {
-        if (!groupName.trim()) {
-            Alert.alert('Attention', 'Veuillez entrer un nom de groupe.')
-            return
+            const [publicGroups, privateGroups] = await Promise.all([
+                listPublicGroups(),
+                currentUser?.id ? listPrivateGroups(currentUser.id) : [],
+            ]);
+
+            setGroupes({
+                public: publicGroups,
+                private: privateGroups,
+            });
+
+        } catch (err) {
+            console.error('Erreur lors du rafraîchissement:', err);
+        } finally {
+            setIsRefreshing(false);
         }
-        setCreating(true)
-        createGroup(groupName, false)
-            .then(() => {
-                setGroupName('')
-                handleRefresh()
-            })
-            .catch((err) => Alert.alert('Erreur', err.message))
-            .finally(() => setCreating(false))
-    }
+    };
+
+
+    const handleCreateGroup = async () => {
+        Alert.prompt(
+            "Créer un groupe",
+            "Entrez le nom du groupe :",
+            [
+                {
+                    text: "Annuler",
+                    style: "cancel",
+                },
+                {
+                    text: "Suivant",
+                    onPress: (groupName) => {
+                        if (!groupName?.trim()) return;
+
+                        Alert.alert(
+                            "Type de groupe",
+                            "Souhaitez-vous que ce groupe soit privé ou public ?",
+                            [
+                                {
+                                    text: "Privé",
+                                    onPress: async () => {
+                                        try {
+                                            await createGroup(groupName.trim(), [currentUser.id], true);
+                                            Alert.alert("Succès", `Groupe privé "${groupName}" créé`);
+
+                                            await handleRefresh();
+                                        } catch (err) {
+                                            console.error("Erreur création groupe:", err);
+                                            Alert.alert("Erreur", "Impossible de créer le groupe");
+                                        }
+                                    },
+                                },
+                                {
+                                    text: "Public",
+                                    onPress: async () => {
+                                        try {
+                                            await createGroup(groupName.trim(), [currentUser.id], false);
+                                            Alert.alert("Succès", `Groupe public "${groupName}" créé`);
+
+                                            await handleRefresh();
+                                        } catch (err) {
+                                            console.error("Erreur création groupe:", err);
+                                            Alert.alert("Erreur", "Impossible de créer le groupe");
+                                        }
+                                    },
+                                },
+                            ]
+                        );
+                    },
+                },
+            ],
+            "plain-text"
+        );
+    };
+
+
 
     return (
         <View style={styles.container}>
@@ -123,13 +186,7 @@ export default function GroupesScreen({ navigation }) {
             >
                 <Text style={styles.sectionTitle}>Créer un groupe</Text>
                 <View style={styles.createRow}>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Nom du groupe"
-                        placeholderTextColor="#888"
-                        value={groupName}
-                        onChangeText={setGroupName}
-                    />
+
                     <TouchableOpacity
                         style={[styles.createButton, creating && styles.disabledButton]}
                         onPress={handleCreateGroup}

@@ -6,7 +6,7 @@ import { useGroups } from '../hooks/useGroups'
 
 function LigneUtilisateur({ utilisateur, estUtilisateurActuel, onCreateGroup }) {
     const { nom, statut, avatar } = utilisateur
-    console.log(utilisateur)
+
     const initiale = nom?.[0]?.toUpperCase() ?? '?'
 
     const handlePress = async () => {
@@ -14,7 +14,7 @@ function LigneUtilisateur({ utilisateur, estUtilisateurActuel, onCreateGroup }) 
         await onCreateGroup(utilisateur)
     }
 
-    // determine color based on statut
+
     const statutStyle =
         statut === 'online'
             ? styles.statutonline

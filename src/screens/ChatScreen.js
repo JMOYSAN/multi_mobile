@@ -27,6 +27,7 @@ export default function ChatScreen({ route, navigation }) {
         loadMoreMessages,
         hasMore,
         pending,
+        remove
     } = useMessages(currentGroupe, currentUser)
 
     const log = (...args) => console.log('[ChatScreen]', ...args)
@@ -43,7 +44,7 @@ export default function ChatScreen({ route, navigation }) {
     const renderItem = ({ item }) => {
         const mine = item.user_id === currentUser.id
         return mine ? (
-            <MessageBubble message={item} />
+            <MessageBubble message={item} onRemove={remove} />
         ) : (
             <MessageBubbleOther
                 message={{

@@ -4,6 +4,7 @@ import {
     fetchMessages,
     fetchOlderMessages,
     sendMessage,
+    deleteMessage,
 } from '../services/messageService.js'
 import { fetchGroupMembers } from '../services/groupService.js'
 import { WS_URL } from '@env'
@@ -14,6 +15,7 @@ export function useMessages(currentGroupe, currentUser) {
     const [hasMore, setHasMore] = useState(true)
     const [pending, setPending] = useState(false)
     const ws = useRef(null)
+    const seenIds = useRef(new Set())
 
     console.log('Connecting WS to: WS_URL==', WS_URL);
 
@@ -67,6 +69,7 @@ export function useMessages(currentGroupe, currentUser) {
     }, [hasMore, currentGroupe?.id, messages, pending, runWithPending])
 
     // Envoyer un message
+
     const send = useCallback(
         async (contenu) => {
             if (!contenu.message?.trim() && !contenu.fichier) return
@@ -76,13 +79,28 @@ export function useMessages(currentGroupe, currentUser) {
                 sendMessage(currentUser.id, currentGroupe.id, contenu.message)
             )
 
-            setMessages((prev) => [newMsg, ...prev])
-
             return newMsg
         },
         [currentUser?.id, currentGroupe?.id, runWithPending]
     )
 
+
+    const remove = useCallback(
+        async (id) => {
+            try {
+                await deleteMessage(id)
+                setMessages((prev) => prev.filter((m) => m.id !== id))
+
+                // broadcast delete to others
+                if (ws.current?.readyState === WebSocket.OPEN) {
+                    ws.current.send(JSON.stringify({ type: 'delete', id }))
+                }
+            } catch (err) {
+                console.error('Erreur suppression message:', err)
+            }
+        },
+        []
+    )
     useEffect(() => {
         if (!currentUser?.id) return
 
@@ -94,17 +112,16 @@ export function useMessages(currentGroupe, currentUser) {
 
         ws.current.onmessage = (event) => {
             try {
-                const msg = JSON.parse(event.data);
+                const msg = JSON.parse(event.data)
                 if (msg.type === "message") {
-
-                    setMessages((prev) => [msg, ...prev]);
+                    if (seenIds.current.has(msg.id)) return // skip your own
+                    seenIds.current.add(msg.id)
+                    setMessages((prev) => [msg, ...prev])
                 }
-
-
             } catch (err) {
-                console.error("[useMessages] parse error:", err);
+                console.error("[useMessages] parse error:", err)
             }
-        };
+        }
 
 
 
@@ -124,5 +141,6 @@ export function useMessages(currentGroupe, currentUser) {
         loadMoreMessages,
         hasMore,
         pending,
+        remove,
     }
 }

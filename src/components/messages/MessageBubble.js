@@ -1,11 +1,21 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 
-export default function MessageBubble({ message }) {
+export default function MessageBubble({ message, onRemove }) {
     return (
         <View style={styles.container}>
             <View style={styles.bubble}>
-                <Text style={styles.text}>{message.content}</Text>
+                <View style={styles.header}>
+                    <Text style={styles.text}>{message.content}</Text>
+
+                    <TouchableOpacity
+                        onPress={() => onRemove?.(message.id)}
+                        style={styles.deleteButton}
+                    >
+                        <Text style={styles.deleteText}>✖</Text>
+                    </TouchableOpacity>
+                </View>
+
                 {message.pending && <Text style={styles.status}>⏳</Text>}
                 {message.error && <Text style={styles.status}>❌</Text>}
             </View>
@@ -21,14 +31,28 @@ const styles = StyleSheet.create({
         maxWidth: '75%',
     },
     bubble: {
-        backgroundColor: '#0078fe', // blue
+        backgroundColor: '#0078fe',
         padding: 10,
         borderRadius: 15,
         borderBottomRightRadius: 0,
     },
+    header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
     text: {
         color: '#fff',
         fontSize: 16,
+        flexShrink: 1,
+    },
+    deleteButton: {
+        marginLeft: 8,
+        paddingHorizontal: 4,
+    },
+    deleteText: {
+        color: '#fff',
+        fontSize: 14,
     },
     status: {
         fontSize: 10,
