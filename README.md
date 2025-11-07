@@ -492,7 +492,7 @@ test('renders login form', () => {
 - **Reconnexion WebSocket:** Peut prendre quelques secondes après perte réseau
 - **Historique:** Limité à ~1000 messages par groupe
 - **Pas de vidéo/audio:** Appels vocaux non supportés
-- **Pas d'édition:** Impossible de modifier ou supprimer un message envoyé
+- **Pas d'édition:** Impossible de modifier un message envoyé
 
 ---
 
