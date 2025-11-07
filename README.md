@@ -1,446 +1,588 @@
-# Contrôle 3 – Application mobile de clavardage (5 %)
+# Bobberchat - Application Mobile
 
-**Cours :** 420-5A6-ST – A25  
-**Date de remise des fichiers :** 23 octobre 2025 à 23h59
+## Vue d'ensemble
 
----
+Application mobile cross-platform (iOS et Android) pour la messagerie instantanée Bobberchat, construite avec React Native et Expo.
 
-## 1. Mise en contexte
-
-Après la mise en place du client desktop (Contrôle 1) et de l’API conteneurisée (Contrôle 2), vous devez livrer une application mobile multiplateforme connectée au serveur.  
-Cette itération doit démontrer l’expérience complète d’un chat :  
-- les utilisateurs s’authentifient avec un jeton **JWT Bearer**  
-- accèdent à leurs conversations  
-- échangent des messages en **temps réel**  
-- synchronisent leur **configuration** sur tous les appareils.
-
----
-
-## 2. Règles d’équipe inchangées
-
-- Composition, gouvernance Git, communication et calendrier : identiques aux contrôles 1 et 2.  
-- Les dépôts `mobile`, `api` et `admin` doivent rester séparés avec gestion de versions (branches, tags).
+**Fonctionnalités principales:**
+- Authentification JWT (login/register)
+- Messagerie en temps réel via WebSockets
+- Gestion de groupes publics et privés
+- Thèmes clair/sombre
+- Interface utilisateur native et fluide
+- Gestion automatique des tokens (refresh)
+- Lazy loading des messages
 
 ---
 
-## 3. Livrable application mobile
+## Architecture technique
 
-### Fonctionnalités minimales
+### Stack
 
-1. **Authentification JWT**  
-   - Écran de connexion / inscription utilisant les endpoints du serveur (création d’utilisateur, obtention d’un `access_token` + `refresh_token`).
+- **Framework**: React Native 0.81.4
+- **Build Tool**: Expo SDK 54
+- **Navigation**: React Navigation 7.x (Native Stack)
+- **State Management**: React Context API + Custom Hooks
+- **Styling**: Styled Components + Expo Linear Gradient
+- **Storage**: AsyncStorage + Expo SecureStore
+- **Notifications**: Expo Notifications
+- **WebSocket**: Native WebSocket API
+- **Auth**: JWT (jwt-decode)
 
-2. **Gestion des salons**  
-   - Lister les salons publics/privés accessibles  
-   - Rejoindre / quitter un salon  
-   - Créer un DM à partir d’un utilisateur
+### Schéma d'architecture
 
-3. **Messages**  
-   - Affichage en **temps réel (WebSocket)**  
-   - Historique des messages via l’API
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     Mobile App (iOS/Android)                │
+│                                                             │
+│  ┌────────────────────────────────────────────────────┐     │
+│  │              App.js (Root)                         │     │
+│  │  ┌──────────────────────────────────────────────┐  │     │
+│  │  │   NavigationContainer (React Navigation)     │  │     │
+│  │  │                                              │  │     │
+│  │  │   ┌──────────────────────────────────────┐   │  │     │
+│  │  │   │   AuthProvider (useAuth)             │   │  │     │
+│  │  │   │   - JWT Token Management             │   │  │     │
+│  │  │   │   - SecureStore for tokens           │   │  │     │
+│  │  │   │   - Auto-refresh logic               │   │  │     │
+│  │  │   └──────────────────────────────────────┘   │  │     │
+│  │  │                                              │  │     │
+│  │  │   ┌──────────────────────────────────────┐   │  │     │
+│  │  │   │   ThemeProvider                      │   │  │     │
+│  │  │   │   - Dark/Light mode                  │   │  │     │
+│  │  │   │   - Persistent theme storage         │   │  │     │
+│  │  │   └──────────────────────────────────────┘   │  │     │
+│  │  │                                              │  │     │
+│  │  │   ┌──────────────────────────────────────┐   │  │     │
+│  │  │   │   RootNavigator                      │   │  │     │
+│  │  │   │                                      │   │  │     │
+│  │  │   │   Auth Stack (if not logged in):     │   │  │     │
+│  │  │   │     - LoginScreen                    │   │  │     │
+│  │  │   │     - RegisterScreen                 │   │  │     │
+│  │  │   │                                      │   │  │     │
+│  │  │   │   Main Stack (if logged in):         │   │  │     │
+│  │  │   │     - HomeScreen (Dashboard)         │   │  │     │
+│  │  │   │     - GroupesScreen (Group List)     │   │  │     │
+│  │  │   │     - ChatScreen (Messages)          │   │  │     │
+│  │  │   │     - UserScreen (Profile/Settings)  │   │  │     │
+│  │  │   └──────────────────────────────────────┘   │  │     │
+│  │  └──────────────────────────────────────────────┘  │     │
+│  └────────────────────────────────────────────────────┘     │
+│                                                             │
+│  ┌────────────────────────────────────────────────────┐     │
+│  │               Custom Hooks                         │     │
+│  │  - useAuth: Authentication state & methods         │     │
+│  │  - useMessages: Messages + WebSocket live          │     │
+│  │  - useGroups: Groups CRUD                          │     │
+│  │  - useUsers: Users list                            │     │
+│  └────────────────────────────────────────────────────┘     │
+│                                                             │
+│  ┌────────────────────────────────────────────────────┐     │
+│  │               Services Layer                       │     │
+│  │  - authService: Login, register, refresh           │     │
+│  │  - messageService: CRUD messages                   │     │
+│  │  - groupService: CRUD groups                       │     │
+│  │  - userService: CRUD users                         │     │
+│  │  - api.js: Base fetch wrapper with auth            │     │
+│  └────────────────────────────────────────────────────┘     │
+│                                                             │
+│  ┌────────────────────────────────────────────────────┐     │
+│  │               Components                           │     │
+│  │  - Topbar: Navigation header                       │     │
+│  │  - ThemeToggleButton: Dark/Light switch            │     │
+│  │  - MessageBubble: User's own message               │     │
+│  │  - MessageBubbleOther: Other user's message        │     │
+│  │  - ChatInput: Message input field                  │     │
+│  │  - TypingIndicator: Typing animation               │     │
+│  └────────────────────────────────────────────────────┘     │
+│                                                             │
+│  ┌────────────────────────────────────────────────────┐     │
+│  │               Storage                              │     │
+│  │  - AsyncStorage: User data, theme, cache           │     │
+│  │  - SecureStore: JWT tokens (encrypted)             │     │
+│  └────────────────────────────────────────────────────┘     │
+└──────────────────────┬──────────────────────────────────────┘
+                       │
+                       │ HTTPS + WebSocket
+                       │
+┌──────────────────────▼───────────────────────────────────┐
+│                  Backend API                             │
+│  - REST: https://bobberchat.com/api/*                    │
+│  - WebSocket: wss://bobberchat.com/ws                    │
+└──────────────────────────────────────────────────────────┘
+```
 
-4. **Notifications locales**  
-   - Badge + notification push pour les nouveaux messages reçus hors focus
+### Flux de navigation
 
-5. **Préférences synchronisées**  
-   - Thème, langue, configuration d’alertes récupérés / écrits via l’API
+```
+App Launch
+    │
+    ├─→ AuthContext checks SecureStore for token
+    │
+    ├─→ Token exists & valid?
+    │   ├─→ YES → Navigate to Home (Main Stack)
+    │   └─→ NO  → Navigate to Login (Auth Stack)
+    │
+Main Stack:
+    HomeScreen (Dashboard)
+        ├─→ GroupesScreen (Group List)
+        │       └─→ ChatScreen (Messages + WebSocket)
+        └─→ UserScreen (Profile/Settings)
+                └─→ Logout → Auth Stack (Login)
+```
 
----
+### Flux de données temps réel
 
-### Expérience utilisateur
-
-- UI réactive (tactile)  
-- Gestion du clavier virtuel  
-- Animations légères pour transitions  
-- Gestion des erreurs : toasts / dialogues sur échec serveur, expiration de session, perte réseau
-
----
-
-## 4. Exigences côté serveur
-
-- **Authentification**  
-  - Endpoints : `register`, `login`, `refresh`, `logout`  
-  - Jetons JWT signés avec durées distinctes pour `access` et `refresh`, stockage sécurisé côté client  
-  - Rotation des refresh tokens et liste de révocation conservée en base
-
-- **Chat temps réel**  
-  - Canal WebSocket (ou équivalent) émettant :  
-    - Nouveaux messages  
-    - Suppression de message  
-    - Indicateurs « typing »  
-    - Présence (connecté / déconnecté) via Redis Pub/Sub
-
-- **Sécurité**  
-  - Hachage des mots de passe  
-  - Anti brute-force (rate limit)
-
----
-
-## 5. Exigences client Electron
-
-- **Messages** : Implémentation des messages dans les salons.  
-- **Architecture** : Refaire l’architecture pour réutiliser / partager les hooks (ex. React Native avec librairie partageable).
-
----
-
-## 6. Livrables attendus
-
-1. **Dépôts Git**  
-   - `mobile`, `api`, `admin` avec tags versionnés (ex. `mobile-v1.0.0`)
-
-2. **Docker Compose**  
-   - Orchestration de l’API, base de données, Redis
-
-3. **Documentation**  
-   - README détaillé pour chaque dépôt (setup, scripts, tests, variables d’environnement)  
-   - Diagramme d’architecture à jour (mobile + backend + flux temps réel)
-
----
-
-## 7. Critères d’évaluation
-
-### Partie individuelle (5 pts)
-
-- **Communication (2 pts)** : qualité des comptes-rendus, réponses aux revues, présence aux rencontres  
-- **Contribution (3 pts)** : commits / pull requests pertinents, tests, revues livrées dans les délais
-
-### Partie collective (10 pts)
-
-- **Couverture fonctionnelle mobile + backend (3 pts)** : respect des exigences, démo réussie  
-- **Qualité technique (1 pt)** : architecture propre, tests, surveillance  
-- **Livraison / DevOps (1 pt)** : pipelines, documentation, expérience développeur
-
----
-
-## 8. Checklist d’acceptation
-
-- Lancement complet via `docker compose up` + commande mobile documentée  
-- Authentification JWT fonctionnelle (`login`, `refresh`, `logout`) depuis le mobile  
-- Liste des salons + messages synchronisés (**REST + WebSocket**) avec statut « en cours de frappe »  
-- Notifications locales reçues lors d’un message entrant hors focus  
-- Mode hors ligne : relecture historique + envoi différé après reconnexion
-
----
-
-### Table des matières
-
-- Mise en contexte  
-- Règles d'équipe inchangées  
-- Livrable application mobile  
-- Exigences côté serveur  
-- Exigences client Electron  
-- Livrables attendus  
-- Critères d'évaluation  
-- Checklist d'acceptation
-
-
-
-
-
-# 📱 Application Mobile de Messagerie 
-
-## 🧩 Présentation générale
-
-Ce projet constitue la **partie mobile** d’une application complète de messagerie en temps réel
-L’application permet la communication entre plusieurs utilisateurs, la gestion de groupes publics et privés, l’envoi et la réception de messages, la gestion d’un thème clair/sombre synchronisé avec le backend, ainsi qu’une authentification sécurisée.
-
-### Fonctionnalités principales
-- Authentification complète (login, inscription, logout)
-- Token JWT et persistance via AsyncStorage
-- Messagerie instantanée (via API REST ou WebSocket)
-- Groupes publics et privés
-- Thème clair/sombre synchronisé avec le backend
-- Gestion d’état via React Context
-- Interface adaptative pour mobile et web
-
----
-
-## ⚙️ Installation et configuration
-
-### 1. Prérequis
-Avant d’installer le projet, assurez-vous d’avoir :
-- Node.js ≥ 18
-- npm ou yarn
-- Expo CLI (`npm install -g expo-cli`)
-- Un serveur backend fonctionnel sur Express
-- Un simulateur Android/iOS ou l’app Expo Go installée sur téléphone
-
----
-
-### 2. Installation du projet
-
-```bash
-git clone https://github.com/ton-utilisateur/mon-app-chat-mobile.git
-cd mon-app-chat-mobile
-npm install
-
-npx expo start --tunnel
-
+```
+User A (Mobile)                Backend                 User B (Mobile)
+      │                          │                           │
+      │  1. Connect WebSocket    │                           │
+      ├─────────────────────────→│                           │
+      │                          │  2. Connect WebSocket     │
+      │                          │←──────────────────────────┤
+      │                          │                           │
+      │  3. Send message (HTTP)  │                           │
+      ├─────────────────────────→│                           │
+      │                          │  4. Save to DB            │
+      │                          │  5. Redis Pub/Sub         │
+      │                          │                           │
+      │  6. Broadcast via WS     │                           │
+      │←─────────────────────────┤                           │
+      │                          ├──────────────────────────→│
+      │                          │  7. Receive live message  │
+      │  8. Update UI            │                           │
+      │  9. Show notification    │  10. Update UI            │
 ```
 
 ---
 
-### 3. Variables d’environnement
+## Prérequis
 
-Créez un fichier `.env` à la racine du projet :
-mettez votre adresse ip
+### Logiciels requis
+
+- **Node.js**: >= 18.x (recommandé 20.x)
+- **npm** ou **yarn**: >= 9.x
+- **Expo CLI**: Installation automatique via `npx`
+- **Expo Go App**: Pour tests sur device physique
+---
+
+## Installation
+
+### 1. Cloner le repository
+
+```bash
+git clone https://github.com/JMOYSAN/multi_mobile.git
+cd multi_mobile
+git checkout master
+```
+
+### 2. Installer les dépendances
+
+```bash
+npm install
+```
+
+Ou avec Yarn:
+```bash
+yarn install
+```
+
+### 3. Configurer les variables d'environnement
+
+Créer un fichier `.env` à la racine:
 
 ```env
-API_URL=http://10.0.0.33:3000
-WS_URL=ws://10.0.0.33:3000
+API_URL=https://bobberchat.com
+WS_URL=wss://bobberchat.com/ws
 ```
 
-⚠️ **Attention :**
-- Android Emulator → `10.0.2.2`
-- iOS Simulator → `localhost`
-- Appareil physique → utilisez votre IP locale (`http://192.168.x.x:3000`)
+> ⚠️ **Important**: Redémarrer le serveur Expo après modification du `.env`
 
 ---
 
-### 4. Scripts
+## Lancement
 
-| Commande | Description |
-|-----------|-------------|
-| `npm start` | Lance le serveur Expo |
-| `npm run android` | Lance sur un émulateur Android |
-| `npm run ios` | Lance sur un simulateur iOS |
-| `npm run web` | Exécute la version web |
-| `npm run lint` | Analyse de code |
-| `npm run test` | Tests unitaires |
+### Mode développement
 
----
-
-## 📂 Structure du projet
-
-```
-📦 mon-app-chat-mobile
- ┣ 📂 components/
- ┃ ┣ 📂 messages/
- ┃ ┃ ┣ ChatInput.js
- ┃ ┃ ┣ MessageBubble.js
- ┃ ┃ ┣ MessageBubbleOther.js
- ┃ ┃ ┗ TypingIndicator.js
- ┃ ┣ ThemeToggleButton.js
- ┃ ┗ Topbar.js
- ┣ 📂 context/
- ┃ ┣ AuthContext.js
- ┃ ┗ ThemeContext.js
- ┣ 📂 hooks/
- ┃ ┣ useGroups.js
- ┃ ┗ useMessages.js
- ┣ 📂 screens/
- ┃ ┣ HomeScreen.js
- ┃ ┣ LoginScreen.js
- ┃ ┣ RegisterScreen.js
- ┃ ┣ GroupesScreen.js
- ┃ ┗ ChatScreen.js
- ┣ 📂 services/
- ┃ ┣ authService.js
- ┃ ┣ messageService.js
- ┃ ┣ groupService.js
- ┃ ┗ api.js
- ┣ App.js
- ┣ package.json
- ┗ .env
-```
-
----
-
-## 🔐 Authentification
-
-Gérée par **AuthContext.js** :
-- `login()` → appelle `/users/login`
-- `register()` → appelle `/users/register`
-- Stocke le `token` et l’utilisateur dans **AsyncStorage**
-- Ajoute automatiquement le token dans `fetchWithAuth`
-- `logout()` → supprime toutes les données locales
-- Vérifie la session automatiquement au démarrage
-
-**Flux d’authentification :**
-1. L’utilisateur saisit ses identifiants.
-2. L’API renvoie les données + le token.
-3. Le token est stocké et réutilisé.
-4. L’utilisateur reste connecté même après redémarrage.
-
----
-
-## 💬 Messagerie
-
-### Endpoints
-| Méthode | Route | Description |
-|----------|--------|-------------|
-| GET | `/messages?groupId=1` | Récupère les messages du groupe |
-| POST | `/messages` | Envoie un message |
-| GET | `/messages/lazy/:groupId?beforeId=X` | Charge les anciens messages |
-| GET | `/groups-users/group/:groupId` | Récupère les membres du groupe |
-
-### Envoi de message
-La fonction `sendMessage(userId, groupId, content)` envoie un message via `fetchWithAuth` :
-```js
-export function sendMessage(userId, groupId, content) {
-  return fetchWithAuth(`${API_URL}/messages`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ user_id: userId, group_id: groupId, content })
-  }).then(res => res.json());
-}
-```
-
-### Réception
-Les messages sont rechargés via `fetchMessages(groupId)` et affichés dynamiquement dans `ChatScreen`.
-
----
-
-## 🎨 Gestion des thèmes (clair / sombre)
-
-### Définition des thèmes (`ThemeContext.js`)
-
-```js
-export const lightTheme = {
-  background: '#F3EEEA',
-  text: '#000000',
-  primary: '#B0A695',
-  messageBackground: '#B0A695',
-  messageOtherBackground: '#EBE3D5'
-};
-
-export const darkTheme = {
-  background: '#2c3639',
-  text: '#b38bfa',
-  primary: '#a27b5c',
-  messageBackground: '#a27b5c',
-  messageOtherBackground: '#465554'
-};
-```
-
-### Fonctionnement
-- Le thème de chaque utilisateur est stocké dans `users.theme` (colonne SQL).
-- Le **ThemeProvider** charge le thème défini dans le profil utilisateur.
-- Le **ThemeToggleButton** :
-  1. Met à jour le thème en base via `PUT /users/:id`
-  2. Met à jour localement le `ThemeContext`
-  3. Rafraîchit l’interface instantanément
-
-### Exemple d’usage :
-```js
-const { colors } = useTheme();
-
-<View style={{ backgroundColor: colors.background }}>
-  <Text style={{ color: colors.text }}>Bonjour !</Text>
-</View>
-```
-
----
-
-## 🖥️ Écrans
-
-### 🏠 HomeScreen
-- Affiche le message d’accueil.
-- Montre les boutons de navigation (connexion, groupes, utilisateurs).
-- Affiche le bouton de changement de thème si l’utilisateur est connecté.
-
-### 👥 GroupesScreen
-- Liste des groupes publics/privés.
-- Permet de rejoindre un groupe.
-- Redirige vers ChatScreen avec les bons paramètres (`currentUser`, `currentGroupe`).
-
-### 💬 ChatScreen
-- Affiche les messages du groupe sélectionné.
-- Différencie tes messages (`MessageBubble`) et ceux des autres (`MessageBubbleOther`).
-- Permet l’envoi via `ChatInput`.
-- Recharge les anciens messages automatiquement.
-
-### ✏️ ChatInput
-- Champ de texte et bouton d’envoi.
-- Déclenche la fonction `onSend()` du ChatScreen.
-
----
-
-## 🔄 Cycle de vie des messages
-
-1. L’utilisateur rejoint un groupe.
-2. `fetchMessages()` charge les messages depuis l’API.
-3. Lorsqu’un message est envoyé :
-   - `sendMessage()` est appelé.
-   - L’API crée le message et le renvoie.
-   - L’interface met à jour la `FlatList`.
-4. Lorsqu’un autre utilisateur envoie un message :
-   - Le message est reçu via WebSocket (ou rechargé périodiquement).
-   - La vue se met à jour.
-
----
-
-## 🧩 Intégration avec l’API
-
-### Authentification
-- `/users/login` → renvoie l’utilisateur et son token.
-- `/users/register` → crée un compte.
-- `/users/:id` (PUT) → met à jour le thème ou le statut.
-
-### Groupes
-- `/groups` → liste les groupes
-- `/groups-users` → ajoute ou supprime des membres
-- `/groups-users/group/:id` → récupère les membres d’un groupe
-
-### Messages
-- `/messages` → envoie un message
-- `/messages/:groupId` → récupère les messages
-
----
-
-## 🧪 Tests manuels
-
-1. Démarrer le backend :  
-   `npm run dev` (dans le dossier du serveur)
-2. Démarrer l’app mobile :  
-   `npx expo start`
-3. Ouvrir sur deux appareils différents avec deux utilisateurs.
-4. Rejoindre le même groupe.
-5. Envoyer des messages et vérifier leur affichage instantané.
-
----
-
-## 🧰 Dépannage
-
-| Problème | Cause probable | Solution |
-|-----------|----------------|-----------|
-| `Network request failed` | Mauvaise IP ou localhost sur mobile | Remplacer `localhost` par ton IP locale dans `.env` |
-| Messages inversés | `FlatList` inversée | Utiliser `inverted` ou inverser l’ordre du tableau |
-| Thème ne change pas | Mauvaise propagation du contexte | Vérifier que `ThemeProvider` englobe `RootNavigator` |
-| Token expiré | Session non rafraîchie | Relancer la connexion utilisateur |
-| Aucun message reçu | Mauvaise route ou problème CORS | Vérifier le backend et `fetchWithAuth` |
-
----
-
-## 🚀 Séquence de démarrage
+**Démarrer le serveur Expo:**
 
 ```bash
-# Backend
-cd server
-npm run dev
+npm start
+```
 
-# Frontend mobile
-cd mobile
+Ou:
+```bash
 npx expo start
 ```
 
-Scannez le QR code avec **Expo Go** ou ouvrez le simulateur.
+Ceci ouvre le **Expo Dev Tools** dans le navigateur avec un QR code.
+
+### Lancer sur iOS Simulator
+
+```bash
+npm run ios
+```
+
+Ou via Expo Dev Tools: Appuyer sur `i`
+
+### Lancer sur Android Emulator
+
+```bash
+npm run android
+```
+
+Ou via Expo Dev Tools: Appuyer sur `a`
+
+### Lancer sur device physique
+
+1. Installer **Expo Go** sur votre téléphone
+2. Scanner le QR code affiché dans le terminal
+3. L'app se charge automatiquement
+
+> 💡 **Astuce**: Assurez-vous que votre téléphone et ordinateur sont sur le même réseau Wi-Fi.
+
+### Mode Tunnel (pour réseau différent)
+
+```bash
+npx expo start --tunnel
+```
+
+Utilise ngrok pour exposer le serveur publiquement.
 
 ---
 
-## 📘 Conclusion
+## Configuration
 
-Ce projet fournit une base complète pour une application mobile moderne et connectée :
-- Authentification sécurisée
-- Messagerie fonctionnelle
-- Thèmes synchronisés
-- Persistance et UX fluide
+### Variables d'environnement
 
-Il est facilement extensible pour ajouter :
-- Notifications push
-- WebSocket natif
-- Système d’amis
-- Profil utilisateur complet
-- Mode hors ligne
+Fichier `.env`:
 
-💡 **But du projet** : servir de fondation solide pour un écosystème complet React Native + Node.js en environnement temps réel.
+```env
+# Backend API Base URL
+API_URL=https://bobberchat.com
+
+# WebSocket Server URL
+WS_URL=wss://bobberchat.com/ws
+```
+
+**Utilisation dans le code:**
+
+```javascript
+import { API_URL, WS_URL } from '@env';
+
+const response = await fetch(`${API_URL}/api/users`);
+const ws = new WebSocket(`${WS_URL}?user=${userId}`);
+```
+---
+
+## Scripts disponibles
+
+| Script | Description |
+|--------|-------------|
+| `npm start` | Lance le serveur Expo (Metro bundler) |
+| `npm run android` | Lance l'app sur Android emulator/device |
+| `npm run ios` | Lance l'app sur iOS simulator |
+| `npm run web` | Lance l'app dans le navigateur (web preview) |
+| `npm run lint` | Lint le code avec ESLint |
+| `npm run lint:fix` | Lint et corrige automatiquement |
+
+### Commandes Expo utiles
+
+```bash
+# Clear cache et redémarrer
+npx expo start --clear
+
+# Build pour production (EAS Build)
+npx eas build --platform android
+npx eas build --platform ios
+
+# Soumettre à l'App Store / Play Store
+npx eas submit --platform android
+npx eas submit --platform ios
+```
+
+---
+
+## Tests
+
+### Tests manuels
+
+**Scénarios à tester:**
+
+1. **Authentification:**
+   - Inscription avec nouveau compte
+   - Login avec compte existant
+   - Logout et vérification du clear des tokens
+
+2. **Navigation:**
+   - Navigation entre les écrans
+   - Retour arrière (back button)
+
+3. **Messagerie:**
+   - Envoi de messages
+   - Réception en temps réel
+   - Scroll infini (lazy loading)
+
+4. **Groupes:**
+   - Création de groupe
+   - Ajout de membres
+   - Switch entre groupes
+
+5. **Thème:**
+   - Switch dark/light mode
+   - Persistance après redémarrage
+
+### Tests automatisés (à implémenter)
+
+**Framework recommandé:** Jest + React Native Testing Library
+
+```bash
+npm install --save-dev @testing-library/react-native jest
+```
+
+Exemple de test:
+
+```javascript
+// __tests__/LoginScreen.test.js
+import { render, fireEvent } from '@testing-library/react-native';
+import LoginScreen from '../src/screens/LoginScreen';
+
+test('renders login form', () => {
+  const { getByPlaceholderText } = render(<LoginScreen />);
+  expect(getByPlaceholderText('Username')).toBeTruthy();
+  expect(getByPlaceholderText('Password')).toBeTruthy();
+});
+```
+---
+
+## Guide utilisateur BETA
+
+### Première utilisation
+
+#### Installation
+
+**Via Expo Go (BETA testing):**
+1. Installer **Expo Go** depuis l'App Store ou Play Store
+2. Scanner le QR code fourni par l'équipe de dev
+3. L'app se charge automatiquement
+
+#### Inscription et connexion
+
+1. **Créer un compte:**
+   - Lancer l'app
+   - Taper sur "S'inscrire" ou "Register"
+   - Entrer un nom d'utilisateur unique
+   - Choisir un mot de passe sécurisé (min 6 caractères)
+   - Taper "Créer un compte"
+
+2. **Se connecter:**
+   - Entrer votre nom d'utilisateur
+   - Entrer votre mot de passe
+   - Taper "Connexion"
+
+> 💡 **Session persistante:** Vous restez connecté même après fermeture de l'app.
+
+---
+
+### Navigation et utilisation
+
+#### Écrans principaux
+
+**1. HomeScreen (Accueil)**
+- Vue d'ensemble des groupes récents
+- Accès rapide aux conversations actives
+- Bouton pour créer un nouveau groupe
+
+**2. GroupesScreen (Groupes)**
+- Liste de tous vos groupes (publics + privés)
+- Créer un nouveau groupe
+- Rejoindre un groupe public
+- Voir les membres d'un groupe
+
+**3. ChatScreen (Messagerie)**
+- Fil de conversation en temps réel
+- Envoi de messages texte
+- Scroll infini pour charger l'historique
+- Indicateur de frappe (typing)
+- Notifications pour nouveaux messages
+
+**4. UserScreen (Profil)**
+- Informations du compte
+- Changer le thème (clair/sombre)
+- Se déconnecter
+
+---
+
+### Fonctionnalités détaillées
+
+#### Envoyer un message
+
+1. Sélectionner un groupe dans la liste
+2. Taper votre message dans le champ en bas
+3. Appuyer sur le bouton **"Envoyer"** ou touche **Entrée**
+4. Le message apparaît instantanément
+
+#### Créer un groupe
+
+1. Aller sur **GroupesScreen**
+2. Taper sur **"+ Créer un groupe"**
+3. Remplir les informations:
+   - Nom du groupe
+   - Type: Public ou Privé
+   - Ajouter des membres (si privé)
+4. Confirmer la création
+
+#### Ajouter des membres à un groupe
+
+1. Ouvrir un groupe
+2. Taper sur l'icône **"Membres"** ou **"+"**
+3. Sélectionner les utilisateurs à ajouter
+4. Confirmer
+
+#### Charger l'historique
+
+- Dans une conversation, **scroller vers le haut**
+- Les messages plus anciens se chargent automatiquement
+- Continuer à scroller pour charger davantage
+
+#### Changer de thème
+
+1. Aller sur **UserScreen** (profil)
+2. Taper sur **"Changer le thème"**
+3. Choisir **Mode clair** ou **Mode sombre**
+4. Le changement est immédiat et persistant
+
+#### Se déconnecter
+
+1. Aller sur **UserScreen**
+2. Taper sur **"Déconnexion"**
+3. Vous serez redirigé vers l'écran de connexion
+
+---
+
+### Canaux de support
+
+#### Problèmes techniques
+
+**1. L'app ne se charge pas:**
+- Vérifier votre connexion internet
+- Fermer complètement l'app et relancer
+- Vérifier que l'API backend est accessible
+
+**2. Les messages ne s'envoient pas:**
+- Vérifier la connexion réseau
+- Se déconnecter et reconnecter
+
+**3. WebSocket se déconnecte:**
+- L'app tente de reconnecter automatiquement
+- Si échec persistant, redémarrer l'app
+- Vérifier que le serveur WebSocket est actif
+
+#### Contact support
+
+- **Email**: bobbertechnician@gmail.com
+
+---
+
+### Limitations BETA
+
+- **Pas de support fichiers/images:** Messages texte uniquement
+- **Pas de recherche:** Dans les messages ou groupes
+- **Notifications limitées:** Peuvent ne pas fonctionner en arrière-plan sur certains devices
+- **Reconnexion WebSocket:** Peut prendre quelques secondes après perte réseau
+- **Historique:** Limité à ~1000 messages par groupe
+- **Pas de vidéo/audio:** Appels vocaux non supportés
+- **Pas d'édition:** Impossible de modifier un message envoyé
+
+---
+
+## Structure du projet
+
+```
+src/
+├── components/              # Composants UI réutilisables
+│   ├── Topbar.js           # Barre de navigation
+│   ├── ThemeToggleButton.js # Bouton switch thème
+│   └── messages/           # Composants messagerie
+│       ├── ChatInput.js     # Input pour envoyer messages
+│       ├── MessageBubble.js # Bulle message user
+│       ├── MessageBubbleOther.js # Bulle message autres
+│       └── TypingIndicator.js # Animation typing
+│
+├── context/                # React Context (state global)
+│   ├── AuthContext.js      # Auth state (user, tokens)
+│   └── ThemeContext.js     # Theme state (dark/light)
+│
+├── hooks/                  # Custom React Hooks
+│   ├── useAuth.js          # Hook d'authentification
+│   ├── useMessages.js      # Hook messages + WebSocket
+│   ├── useGroups.js        # Hook groupes CRUD
+│   └── useUsers.js         # Hook utilisateurs
+│
+├── navigation/             # Navigation React Navigation
+│   └── RootNavigator.js    # Stack navigator principal
+│
+├── screens/                # Écrans de l'app
+│   ├── LoginScreen.js      # Écran de connexion
+│   ├── RegisterScreen.js   # Écran d'inscription
+│   ├── HomeScreen.js       # Écran d'accueil
+│   ├── GroupesScreen.js    # Liste des groupes
+│   ├── ChatScreen.js       # Conversation/messagerie
+│   └── UserScreen.js       # Profil utilisateur
+│
+├── services/               # Services API
+│   ├── api.js              # Fetch wrapper avec auth
+│   ├── authService.js      # Login, register, refresh
+│   ├── messageService.js   # CRUD messages
+│   ├── groupService.js     # CRUD groupes
+│   └── userService.js      # CRUD utilisateurs
+│
+└── utils/                  # Utilitaires
+    └── notifications.js    # Gestion notifications push
+```
+
+---
+
+## Sécurité et stockage
+
+### Gestion des tokens
+
+**SecureStore (tokens JWT):**
+```javascript
+import * as SecureStore from 'expo-secure-store';
+
+// Sauvegarder le token
+await SecureStore.setItemAsync('accessToken', token);
+
+// Récupérer le token
+const token = await SecureStore.getItemAsync('accessToken');
+
+// Supprimer le token
+await SecureStore.deleteItemAsync('accessToken');
+```
+
+**AsyncStorage (données non-sensibles):**
+```javascript
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// Sauvegarder user data
+await AsyncStorage.setItem('user', JSON.stringify(user));
+
+// Récupérer
+const user = JSON.parse(await AsyncStorage.getItem('user'));
+```
+
+### Best practices
+
+- **Tokens dans SecureStore uniquement** (encrypted)
+- **Ne jamais logger les tokens** en production
+- **Auto-refresh transparent** si accessToken expiré
+- **Clear storage au logout** pour éviter fuites
+
+---
+
+## Auteurs
+
+- Joaquim Moysan
+- Lyam Bathalon
+- François Santerre
