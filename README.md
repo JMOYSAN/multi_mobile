@@ -275,7 +275,7 @@ const ws = new WebSocket(`${WS_URL}?user=${userId}`);
 ```
 ---
 
-## 📜 Scripts disponibles
+## Scripts disponibles
 
 | Script | Description |
 |--------|-------------|
@@ -496,7 +496,7 @@ test('renders login form', () => {
 
 ---
 
-## 📁 Structure du projet
+## Structure du projet
 
 ```
 src/
