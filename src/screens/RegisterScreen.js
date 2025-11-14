@@ -2,6 +2,8 @@ import {useState} from 'react'
 import styled from 'styled-components/native'
 import {StyleSheet, Text} from "react-native";
 import { API_URL } from '@env'
+import {useAuth} from "../context/AuthContext";
+import {login} from "../services/authService";
 
 const RegisterWrapper = styled.View`
     flex: 1;
@@ -72,7 +74,8 @@ export default function RegisterScreen({navigation}) {
     const [error, setError] = useState('')
     const [success, setSuccess] = useState('')
 
-    const handleSubmit = () => {
+    const { register,login } = useAuth()
+    const handleSubmit = async () => {
         setError('')
         setSuccess('')
 
@@ -85,27 +88,11 @@ export default function RegisterScreen({navigation}) {
             setError('Les mots de passe ne correspondent pas')
             return
         }
+        await register(username, password);
 
-        fetch(`${API_URL}3000/users/register`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({username, password}),
-        })
-            .then((res) =>
-                res.json().then((data) => ({status: res.status, body: data}))
-            )
-            .then(({status, body}) => {
-                if (status !== 201) {
-                    setError(body.error || 'Erreur lors de l’inscription')
-                } else {
-                    setSuccess('Compte créé avec succès !')
-                    navigation.replace('Login')
-                }
-            })
-            .catch((err) => {
-                console.error(err)
-                setError('Erreur serveur')
-            })
+        await login(username, password)
+        navigation.navigate('Home')
+
     }
 
 

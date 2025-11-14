@@ -87,6 +87,7 @@ export default function LoginScreen({ navigation }) {
 
     return (
         <LoginWrapper>
+
             <LoginCard>
                 <Title>Connexion</Title>
 
@@ -112,6 +113,7 @@ export default function LoginScreen({ navigation }) {
                     <ButtonText>{pending ? 'Connexion...' : 'Se connecter'}</ButtonText>
                 </Button>
 
+                <Button title='Try!' onPress={ () => { Sentry.captureException(new Error('First error')) }}/>
                 <Link onPress={() => navigation.replace('Register')} disabled={pending}>
                     <Text>Pas encore de compte ?</Text>
                     <LinkText>Créer un compte</LinkText>

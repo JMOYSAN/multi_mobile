@@ -110,7 +110,7 @@ export function AuthProvider({ children }) {
 
     // ---------- LOGOUT ----------
     const logout = useCallback(async () => {
-        await logoutService();
+
         if (currentUser?.id) {
             await setUserOffline(currentUser.id);
         }
